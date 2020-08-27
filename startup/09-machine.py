@@ -14,10 +14,12 @@ class Ring(Device):
     current = Cpt(EpicsSignalRO, 'SR:C03-BI{DCCT:1}I:Real-I')
     lifetime = Cpt(EpicsSignalRO, 'SR:OPS-BI{DCCT:1}Lifetime-I')
     energy = Cpt(EpicsSignalRO, 'SR{}Energy_SRBend')
-    ops = Cpt(EpicsSignal, 'SR-OPS{}Mode-Sts', string=True)
+    mode = Cpt(EpicsSignal, 'SR-OPS{}Mode-Sts', string=True)
     filltarget = Cpt(EpicsSignalRO, 'SR-HLA{}FillPattern:DesireImA')
 
 ring = Ring(name='ring')
+ring.mode.name = 'ring_ops'
+
 
 #ring_ops = EpicsSignal('SR-OPS{}Mode-Sts', name='ring_ops', string=True)
 mstr_shutter_enable = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts', name='mstr_shutter_enable')
