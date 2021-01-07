@@ -9,4 +9,4 @@ resources:
 jobs:
 - template: azure-linux.yml@templates  # Template reference
   parameters:
-    beamline_acronym: JPLS
+      beamline_acronym: JPLS  # TODO: rename to OPLS once the nslsii.configure_base(...) is updated.
