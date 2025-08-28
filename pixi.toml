@@ -27,10 +27,20 @@ ply = ">=3.11,<4"
 colorlog = ">=6.9.0,<7"
 epicscorelibs = "*"
 pydantic-numpy = "*"
+suitcase-tiff = ">=0.4.0,<0.5"
+lmfit = ">=1.3.4,<2"
+bluesky-darkframes = ">=0.6.0,<0.7"
+peakutils = ">=1.3.5,<2"
+suitcase-csv = ">=0.3.0,<0.4"
+pytango = ">=10.0.3,<11"
+suitcase-jsonl = ">=0.2.2,<0.3"
+pyqt = "<6"
+pyqtgraph = ">=0.13.7,<0.14"
 
 
 [feature.profile.pypi-dependencies]
 ophyd-async = { version = ">=0.9.0, <0.10", extras = ["ca", "pva"] }
+hasyutils = ">=2.1.0, <3"
 
 
 [feature.qs.dependencies]
