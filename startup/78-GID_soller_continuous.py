@@ -128,7 +128,7 @@ def gid_scan_soller_continuous(scan_dict={}, md=None, detector = pilatus100k, al
                           scan_dict=scan_dict)
     
 
-def stth_x2_scan(name, detector = pilatus100k, md=None):
+def stth_x2_scan(name, detector = pilatus100kA, md=None):
 
     base_md = {'plan_name': 'gid_soller',
             'cycle': RE.md['cycle'],
@@ -144,25 +144,36 @@ def stth_x2_scan(name, detector = pilatus100k, md=None):
     base_md.update(md or {})
 
     def inner(x2_start,x2_end,stth_start,stth_end,npts,exp_time,overhead_time, md = None):
-        velocity_old = x2.velocity
+        velocity_old_x2 = x2.velocity
+        velocity_old_slit_x2 = slit_x2.velocity
+        velocity_old_stth = astth.velocity
         yield from bps.mv(x2, x2_start)
+        yield from bps.mv(slit_x2, x2_start)
+        yield from bps.mv(astth,astth.position+stth_start)
         print(0)
         time_scan=npts*(exp_time+overhead_time)
-        velocity= np.abs(x2_start-x2_end)/time_scan
-        detectors = [quadem, pilatus100k]
+        velocity_x2= np.abs(x2_start-x2_end)/time_scan
+        velocity_astth= np.abs(stth_start-stth_end)/time_scan
+        print(velocity_x2,velocity_astth)
+        print(velocity_x2)
+        detectors = [quadem, pilatus100kA]
         yield from det_set_exposure(detectors, exposure_time=exp_time, exposure_number = 1)
-        yield from bps.mv(x2.velocity, velocity)
+        yield from bps.mv(x2.velocity, velocity_x2)
+        yield from bps.mv(slit_x2.velocity, velocity_x2)
+        yield from bps.mv(astth.velocity, velocity_astth)
         #wait is for the vibration to damp
         yield from bps.sleep(5)
         print(1)
         yield from bps.abs_set(x2,x2_end, group='get_new_target') 
-        yield from bp.rel_scan([quadem, pilatus100k],astth,stth_start,stth_end,npts, md=md)
+        yield from bps.abs_set(slit_x2,x2_end, group='get_new_target')
+        yield from bps.abs_set(astth,astth.position+np.abs(stth_start-stth_end), group='get_new_target')
+        yield from bp.rel_scan([quadem, pilatus100kA],sh,0,0,npts, md=md)
         yield from bps.wait(group='get_new_target')
-        # yield from bps.mv(x2.velocity, velocity_old)
+        # yield from bps.mv(x2.velocity, velocity_old_x2)
 
 
 
-    yield from bpp.reset_positions_wrapper(inner(30,40,-1,1,21,1,2, md=base_md), devices=[x2.velocity])
+    yield from bpp.reset_positions_wrapper(inner(30,32,1,-1,20,1,4, md=base_md), devices=[x2.velocity,slit_x2.velocity,astth.velocity])
 
 
 
