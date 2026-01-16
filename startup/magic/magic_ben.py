@@ -17,13 +17,15 @@ from IPython.core.magic import (register_line_magic)
 #deviceList = None
 
 detectors_spec=[quadem,lambda_det]
-def makeSpecGenerator( line): 
+def makeSpecGenerator( line):
     """
     returns generators for the spock commands
     """
     print(line)
 
     from bluesky.plans import scan, rel_scan, list_scan, count
+    # mabt does not exist in plan_stubs, but is defined
+    # in 30-geometry.py
     from bluesky.plan_stubs import mv, mabt
     def gen():
 
@@ -100,43 +102,43 @@ def makeSpecGenerator( line):
 @register_line_magic
 def ascan(line):
     '''
-    execute an ascan, e.g.: ascan eh_mot65 0 1 10 0.1    
+    execute an ascan, e.g.: ascan eh_mot65 0 1 10 0.1
       scan eh_mot65 from 0 to 1, 10 points, sample time 0.1
     '''
     print( "magics.ascan, called with %s" % line)
     RE( makeSpecGenerator( 'ascan ' + line))
-    return 
+    return
 
 @register_line_magic
 def a2scan(line):
     '''
-    execute an a2scan, e.g.: ascan eh_mot65 0 1 ehmot66 0 2 10 0.1    
+    execute an a2scan, e.g.: ascan eh_mot65 0 1 ehmot66 0 2 10 0.1
       scan eh_mot65 from 0 to 1, 10 points, sample time 0.1
     '''
     print( "magics.a2scan, called with %s" % line)
     RE( makeSpecGenerator( 'a2scan ' + line))
-    return 
+    return
 
 
 @register_line_magic
 def dscan(line):
     '''
-    execute an dscan, e.g.: dscan eh_mot65 0 1 10 0.1    
+    execute an dscan, e.g.: dscan eh_mot65 0 1 10 0.1
       scan eh_mot65 relative from 0 to 1, 10 points, sample time 0.1
     '''
     print( "magics.dscan, called with %s" % line)
     RE( makeSpecGenerator( 'dscan ' + line))
-    return 
+    return
 
 @register_line_magic
 def d2scan(line):
     '''
-    execute an d2scan, e.g.: ascan eh_mot65 0 1 ehmot66 0 2 10 0.1    
+    execute an d2scan, e.g.: ascan eh_mot65 0 1 ehmot66 0 2 10 0.1
       scan eh_mot65 relative from 0 to 1, 10 points, sample time 0.1
     '''
     print( "magics.d2scan, called with %s" % line)
     RE( makeSpecGenerator( 'd2scan ' + line))
-    return 
+    return
 
 
 @register_line_magic
@@ -150,7 +152,7 @@ def count(line):
     print(detectors_all_auto,lst[0])
     RE(det_set_exposure(detectors_all_auto, exposure_time=float(lst[0]), exposure_number = 1))
     RE(bp.count(detectors_all_auto))
-    return 
+    return
 
 
 @register_line_magic
@@ -164,7 +166,7 @@ def ben2(line):
     print(lst[0], lst[1])
 #    RE(mabt(float( lst[0]), float( lst[1]), float( lst[2]))
 #    RE( makeSpecGenerator( 'mabt ' + line ))
-    return 
+    return
 
 @register_line_magic
 def dscan(line):
@@ -179,11 +181,10 @@ def dscan(line):
     yield from dscan( lst[1], float( lst[2]), float( lst[3]), int( lst[4]))
 #    RE( lst[1], float( lst[2]), float( lst[3]), int( lst[4]))
 #    print(lst[0], lst[1])
-    return 
+    return
 
 
 
 
 magicCommands = [ ben, ben2, count,  ascan, a2scan, dscan]
 del magicCommands
-
