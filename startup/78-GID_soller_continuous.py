@@ -146,34 +146,36 @@ def stth_x2_scan(name, detector = pilatus100kA, md=None):
     def inner(x2_start,x2_end,stth_start,stth_end,npts,exp_time,overhead_time, md = None):
         velocity_old_x2 = x2.velocity
         velocity_old_slit_x2 = slit_x2.velocity
-        velocity_old_stth = astth.velocity
-        yield from bps.mv(x2, x2_start)
-        yield from bps.mv(slit_x2, x2_start)
-        yield from bps.mv(astth,astth.position+stth_start)
+        #velocity_old_stth = astth.velocity
+        yield from bps.mv(x2, x2_start,slit_x2, x2_start)
+        #yield from bps.mv(astth,astth.position+stth_start)
         print(0)
         time_scan=npts*(exp_time+overhead_time)
         velocity_x2= np.abs(x2_start-x2_end)/time_scan
-        velocity_astth= np.abs(stth_start-stth_end)/time_scan
-        print(velocity_x2,velocity_astth)
+        #velocity_astth= np.abs(stth_start-stth_end)/time_scan
+        #print(velocity_x2,velocity_astth)
         print(velocity_x2)
         detectors = [quadem, pilatus100kA]
         yield from det_set_exposure(detectors, exposure_time=exp_time, exposure_number = 1)
         yield from bps.mv(x2.velocity, velocity_x2)
         yield from bps.mv(slit_x2.velocity, velocity_x2)
-        yield from bps.mv(astth.velocity, velocity_astth)
+        #yield from bps.mv(astth.velocity, velocity_astth)
         #wait is for the vibration to damp
-        yield from bps.sleep(5)
+        #yield from bps.sleep(5)
         print(1)
         yield from bps.abs_set(x2,x2_end, group='get_new_target') 
         yield from bps.abs_set(slit_x2,x2_end, group='get_new_target')
-        yield from bps.abs_set(astth,astth.position+np.abs(stth_start-stth_end), group='get_new_target')
-        yield from bp.rel_scan([quadem, pilatus100kA],sh,0,0,npts, md=md)
+       # yield from bps.abs_set(astth,astth.position+np.abs(stth_start-stth_end), group='get_new_target')
+        yield from bp.rel_scan([quadem, pilatus100kA],oh,0,0,npts, md=md)
         yield from bps.wait(group='get_new_target')
         # yield from bps.mv(x2.velocity, velocity_old_x2)
+    #note that the overhead can be calculate roughly from the distance between points and the velocity
 
 
+    #reset_values=[x2.velocity,slit_x2.velocity,astth.velocity,x2.acceleration,slit_x2.acceleration,astth.acceleration]
+    reset_values=[x2.velocity,slit_x2.velocity,x2.acceleration,slit_x2.acceleration]
 
-    yield from bpp.reset_positions_wrapper(inner(30,32,1,-1,20,1,4, md=base_md), devices=[x2.velocity,slit_x2.velocity,astth.velocity])
+    yield from bpp.reset_positions_wrapper(inner(30,32,1,-1,20,1,0.35, md=base_md), devices=reset_values)
 
 
 
