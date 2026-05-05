@@ -418,6 +418,7 @@ class Geometry(PseudoPositioner):
             oh = sh2 + (self.L3.get() - self.L4.get()) * np.tan(_beta)
 
       # Uses the both sample height stage
+      #we may want to do the switchover at 0.5 rather than 1.0
         if sh_mode == 3:
             sh_total = ( 
              -(self.L2.get() + self.L4.get()) * np.tan(_alpha) / np.cos(_tth)
@@ -428,16 +429,18 @@ class Geometry(PseudoPositioner):
             if sh_total < -20:
                 sh = sh_total +20
                 sh2 = -20
-            if sh_total >= -1:
-                sh = 1
-                sh2 =sh_total+1
+            if sh_total >= 1:
+                sh2 = 1
+                sh =sh_total-1
 
             oh = sh_total + (self.L3.get() - self.L4.get()) * np.tan(_beta)
 
-        # tmp=  -(self.L2.get() + self.L4.get()) * np.tan(_alpha) / np.cos(_tth)
-        # SmplHtMode_user= tmp-geo.sh.user_offset.get() 
-        # sh= tmp + 0.003*np.sin(np.pi*2*(sh_user/0.254)+self.sh_phase.get())
+        # Code for typing to correct for the modulatuin in the sh
 
+        tmp=  -(self.L2.get() + self.L4.get()) * np.tan(_alpha) / np.cos(_tth)
+        sh_user= tmp-geo.sh.user_offset.get() 
+        #sh= tmp + 0.0015*np.sin(np.pi*2*(sh_user/0.254)+self.sh_phase.get())
+        
         # sh = self.sh.position
         
         stblx = self.L2.get() * np.tan(_tth)

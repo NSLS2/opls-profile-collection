@@ -277,6 +277,14 @@ def bsui_scan(motor, position1, position2, npts, time, relative = False, reset =
         elif  motor_name == "geo_astth":
             yield from bps.mov(geo.astth,tmp2)
             yield from set_astth(position_old)
+        elif  motor_name == "S2_hc":
+            yield from bps.mov(S2.hc,tmp2)
+            print('moving the S2_hc, not resetting')
+       #     yield from set_S2_hc(position_old)
+
+        elif  motor_name == "Beam Stop_y":
+            yield from bps.mov(block.y,tmp2)
+            yield from set_blocker(position_old)
 
         elif  motor_name == 'sampl_slit_x2': # only go to the center
             yield from bps.mov(slit_x2,tmp2-10)

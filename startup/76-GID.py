@@ -86,9 +86,14 @@ def gid_scan_stitch(scan_dict={}, md=None, detector = pilatus300k, alphai = 0.1,
         # Move to the good geometry position
             yield from mabt(alphai, 0, stth_list[i]) # gid poistion with beam stop
 
-            sh_nomimal= geo.sh.position
+            # sh_nomimal= geo.sh.position
+            # if sh_offset != 0:
+            #      yield from bps.mv(sh, sh_nomimal+sh_offset)
+
+            # now using sh2, HZ, 2026-03-16
+            sh_nomimal= geo.sh2.position
             if sh_offset != 0:
-                 yield from bps.mv(sh, sh_nomimal+sh_offset)
+                 yield from bps.mv(sh2, sh_nomimal+sh_offset)
 
 
             if (detector is pilatus300k) or (detector is pilatus1m):

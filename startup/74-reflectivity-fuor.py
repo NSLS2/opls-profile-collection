@@ -109,7 +109,9 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
         fraction  = (alpha-alpha_start)/(alpha_stop-alpha_start)
         x2_fraction =fraction*(x2_offset_stop-x2_offset_start)
         # Set the exposure time to the define exp_time for the measurement
-        if exp_time <= 48:
+        # if exp_time <= 48:
+        exp_time_limit = 45 # change exposure time threshold to 45, 2026-03-08, HZ
+        if exp_time <= exp_time_limit: 
             exp_time_set=exp_time
             number_frames= 1.0
             print(exp_time_set,number_frames)
@@ -125,7 +127,8 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
             
             # HZ, 2024-08-29, new method to chop long exposure time to short exposure (less than 45)
             number_frames = 1
-            number_loop = int(np.ceil(exp_time/45))
+            # number_loop = int(np.ceil(exp_time/45))
+            number_loop = int(np.ceil(exp_time/exp_time_limit))
             exp_time_set = np.ceil(exp_time/number_loop) 
             print(exp_time_set,number_loop)
 

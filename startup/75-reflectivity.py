@@ -264,6 +264,8 @@ def read_shutter():
 
 def find_abs(alpha1, precount_time, abs_last1):
     threshold = 2e3
+    threshold = 1e3
+
     # this is the starting attenuator based on the table
     abs_start = get_abs2_alpha_position(alpha1)
     yield from bps.mv(abs2, abs_start )
@@ -272,6 +274,7 @@ def find_abs(alpha1, precount_time, abs_last1):
     yield from bps.mv(shutter, 1)
     yield from bps.sleep(0.2)
     ###
+
     yield from read_shutter()
     ret = yield from bps.trigger_and_read([lambda_det], name='precount')
     yield from bps.mv(shutter, 0)
@@ -283,12 +286,19 @@ def find_abs(alpha1, precount_time, abs_last1):
         # Read the maximum count on a pixel from the detector
     #    lambda_2
     #    lambda_4
+      #  breakpoint()
         i_max4 = ret['lambda_4_max']['value']
         r_max4= i_max4/precount_time
+
+
         i_4 = ret['lambda_4']['value']
+        i_2 = ret['lambda_2']['value']
         r_4= i_4/precount_time
+        r_2= i_2/precount_time
         # look at the maximum count of the pre-count and adjust the default attenuation, can do multiple iterations
         print("COUNT RATES: i4max:i4,r4max:r4", i_max4, i_4,r_max4,r_4)
+        print("COUNT RATES: i2,:r2", i_2,r_2)
+
 
         if i_max4 != 0.0:
             abs_final = int(abs_start + np.floor(np.log10(r_max4/1.0/threshold)))

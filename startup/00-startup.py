@@ -13,6 +13,8 @@ from pathlib import Path
 from tiled.client import from_profile
 import os
 from databroker import Broker
+from tiled.queries import Key, Regex
+from pprint import pprint
 
 EpicsSignal.set_defaults(connection_timeout=10, timeout=60, write_timeout=60)
 EpicsSignalRO.set_defaults(connection_timeout=10, timeout=60)
@@ -91,3 +93,28 @@ def proposal_path():
 
 def assets_path():
     return proposal_path() + "assets/"
+
+def find_proposals(pi_name, cycle=None, show_title=True):
+    if cycle is None:
+        results = tiled_reading_client.search(Regex('proposal.pi_name', f'^{pi_name}'))
+    else:
+        results = tiled_reading_client.search(Regex('proposal.pi_name', f'^{pi_name}')).search(Key("cycle") == cycle)
+    proposal_distinct = results.distinct("proposal.proposal_id", counts=True)
+
+    proposal_info = {}
+    for item in proposal_distinct['metadata']['start.proposal.proposal_id']:
+        if item['count'] > 0:
+            proposal_results = results.search(Key('proposal.proposal_id') == item['value'])
+            scan_single = proposal_results.values().first()
+
+            proposal_info[item['value']] = {'pi_name': pi_name}
+            if cycle is not None:
+                proposal_info[item['value']]['scan_info'] = {'cycle': cycle, 'total' : item['count']}
+            else: 
+                cycle_distinct = proposal_results.distinct("cycle", counts=True)
+                proposal_info[item['value']]['scan_info'] = [{'cycle': elem['value'], 'total': elem['count']} for elem in cycle_distinct['metadata']['start.cycle']]
+
+            if show_title:
+                proposal_info[item['value']]['title'] = scan_single.start['proposal']['title']
+
+    pprint(proposal_info)

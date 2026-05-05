@@ -23,6 +23,12 @@ crl2 = CRL2("XF:12ID1-OP{CRL-Ax:", name="crl")
 # pos2_z1 = 100
 
 
+# Jan 2026
+pos2_y1 = 9.01
+pos2_x1 = 6.752
+pos2_z1 = 175
+
+
 # 14.4keV Nov 2024, FWHM = 13um
 pos2_y1 = 8.9716
 pos2_x1 = 4.2209
