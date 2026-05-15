@@ -4,6 +4,10 @@ name = "opls-profile-collection"
 platforms = ["linux-64"]
 version = "2026.2.0"
 
+
+[activation.env]
+REDIS_HOST="xf12id1-opls-redis1.nsls2.bnl.gov"
+
 [system-requirements]
 libc = "2.17"
 

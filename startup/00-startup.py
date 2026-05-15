@@ -47,8 +47,9 @@ configure_base(
     get_ipython().user_ns,
     broker_name=tiled_inserter,
     publish_documents_with_kafka=True,
-    redis_url = "info.smi.nsls2.bnl.gov",
-    redis_prefix = "opls-")
+    redis_url="xf12id1-opls-redis1.nsls2.bnl.gov",
+    redis_ssl=True,
+)
 
 print("\nInitializing Tiled reading client...\nMake sure you check for duo push.")
 tiled_reading_client = from_profile("nsls2", username=None)["opls"]["raw"]
@@ -110,7 +111,7 @@ def find_proposals(pi_name, cycle=None, show_title=True):
             proposal_info[item['value']] = {'pi_name': pi_name}
             if cycle is not None:
                 proposal_info[item['value']]['scan_info'] = {'cycle': cycle, 'total' : item['count']}
-            else: 
+            else:
                 cycle_distinct = proposal_results.distinct("cycle", counts=True)
                 proposal_info[item['value']]['scan_info'] = [{'cycle': elem['value'], 'total': elem['count']} for elem in cycle_distinct['metadata']['start.cycle']]
 
