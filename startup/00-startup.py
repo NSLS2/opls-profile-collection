@@ -44,11 +44,13 @@ class TiledInserter:
 tiled_inserter = TiledInserter()
 
 configure_base(
-    get_ipython().user_ns,
-    broker_name=tiled_inserter,
-    publish_documents_with_kafka=True,
-    redis_url = "info.smi.nsls2.bnl.gov",
-    redis_prefix = "opls-")
+	    get_ipython().user_ns,
+	    broker_name=tiled_inserter,
+	    publish_documents_with_kafka=True,
+	    redis_url = "xf12id1-opls-redis1.nsls2.bnl.gov",
+	    redis_port=6380,
+	    redis_ssl=True,
+)
 
 print("\nInitializing Tiled reading client...\nMake sure you check for duo push.")
 tiled_reading_client = from_profile("nsls2", username=None)["opls"]["raw"]
