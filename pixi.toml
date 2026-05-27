@@ -4,6 +4,10 @@ name = "opls-profile-collection"
 platforms = ["linux-64"]
 version = "2026.2.0"
 
+
+[activation.env]
+REDIS_HOST="xf12id1-opls-redis1.nsls2.bnl.gov"
+
 [system-requirements]
 libc = "2.17"
 
@@ -12,7 +16,7 @@ bluesky-base = "==1.15.0"
 bluesky-queueserver = "*"
 matplotlib-base= ">=3.10"
 networkx = ">=3.4.2,<4"
-nslsii = "==0.11.8"
+nslsii = ">=0.11.9"
 numpy = "*"
 ophyd = ">=1.11.0"
 pyepics = "*"
