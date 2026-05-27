@@ -1,6 +1,7 @@
 print(f'Loading {__file__}')
 
 from ophyd import Component as Cpt
+from ophyd import Device
 from ophyd import ROIPlugin, TransformPlugin, EpicsSignal, EpicsSignalRO
 from ophyd.areadetector.base import EpicsSignalWithRBV as SignalWithRBV
 from ophyd.areadetector.cam import CamBase
@@ -34,11 +35,11 @@ class Lambda750kCam(CamBase):
 
     _html_docs = ['Lambda750kCam.html']
 
-    config_file_path = ADCpt(EpicsSignal, 'ConfigFilePath')
+    # config_file_path = ADCpt(EpicsSignal, 'ConfigFilePath')
     firmware_version = ADCpt(EpicsSignalRO, 'FirmwareVersion_RBV')
-    operating_mode = ADCpt(SignalWithRBV, 'OperatingMode')
     serial_number = ADCpt(EpicsSignalRO, 'SerialNumber_RBV')
-    temperature = ADCpt(SignalWithRBV, 'Temperature')
+    gating_mode = ADCpt(SignalWithRBV, 'GatingMode')
+    charge_summing = ADCpt(SignalWithRBV, 'ChargeSumming')
 
 
 class LambdaDetector(DetectorBase):
@@ -71,13 +72,13 @@ class Lambda(SingleTriggerV33, LambdaDetector):
 
     low_thr = Cpt(EpicsSignal, 'cam1:LowEnergyThreshold')
     hig_thr = Cpt(EpicsSignal, 'cam1:HighEnergyThreshold')
-    oper_mode = Cpt(EpicsSignal, 'cam1:OperatingMode')
 
     tiff = Cpt(
         TIFFPluginWithFileStore,
         suffix="TIFF1:",
         write_path_template = "",
     )
+
 
     def stage(self, *args, **kwargs):
         folder_name = f"opls-{self.name.lower()}"    # e.g. 'opls-lambda250k'
@@ -87,7 +88,35 @@ class Lambda(SingleTriggerV33, LambdaDetector):
         return super().stage(*args, **kwargs)
 
 
-lambda_det = Lambda('XF:12ID1-ES{Det:Lambda}', name='lambda250k')
+class LambdaLegacy(Lambda):
+    oper_mode = Cpt(EpicsSignal, 'cam1:OperatingMode')
+    threshold_mode = Cpt(EpicsSignal, 'cam1:DualMode')
+
+    def stage(self, *args, **kwargs):
+        self.oper_mode.set(3) # 24 bit mode
+        self.cam.gating_mode.set(0) # Turn off gating mode
+        self.cam.charge_summing.set(1) # Enable charge summing
+        self.threshold_mode.set(0) # Single threshold mode
+        super().stage(*args, **kwargs)
+
+class LambdaXSPD(Lambda):
+    low_thr = ADCpt(SignalWithRBV, 'cam1:LowThreshold')
+    high_thr = ADCpt(SignalWithRBV, 'cam1:HighThreshold')
+    bit_depth = ADCpt(SignalWithRBV, 'cam1:BitDepth')
+    threshold_mode = ADCpt(SignalWithRBV, 'cam1:CounterMode')
+
+    def stage(self, *args, **kwargs):
+        self.bit_depth.set(3) # 24 bit operation
+        self.threshold_mode.set(0) # Single threshold mode
+        self.cam.charge_summing.set(1) # Enable charge summing
+        self.cam.gating_mode.set(0) # Disable gating mode
+
+        return super().stage(*args, **kwargs)
+
+
+
+#lambda_det = LambdaLegacy('XF:12ID1-ES{Det:Lambda}', name='lambda250k')
+lambda_det = LambdaXSPD('XF:12ID1-ES{XSPD-Det:2}', name='lambda250k')
 lambda_det.tiff.kind = 'hinted'
 
 lambda_det.roi1.kind = 'hinted'
@@ -133,4 +162,4 @@ def set_defaut_stat_roi():
 #         lambda_det.cam.acquire_period, exp_t+0.2,
 #         lambda_det.cam.num_images, int(meas_t/exp_t))
 
-
+# lambda_det = None
