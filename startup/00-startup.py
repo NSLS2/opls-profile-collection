@@ -48,6 +48,7 @@ configure_base(
     broker_name=tiled_inserter,
     publish_documents_with_kafka=True,
     redis_url="xf12id1-opls-redis1.nsls2.bnl.gov",
+    redis_port=6380,
     redis_ssl=True,
 )
 
