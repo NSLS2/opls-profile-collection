@@ -44,7 +44,11 @@ class PilatusDetectorCamV33(PilatusDetectorCam):
 
 class PilatusDetector(PilatusDetector):
     cam = Cpt(PilatusDetectorCamV33, 'cam1:')
-    
+
+    def make_data_key(self):
+        ret = super().make_data_key()
+        ret['dtype_numpy'] = '<i4'
+        return ret
 
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFFIterativeWrite):
     ...
