@@ -16,12 +16,14 @@ from databroker import Broker
 from tiled.queries import Key, Regex
 from pprint import pprint
 
+
 EpicsSignal.set_defaults(connection_timeout=10, timeout=60, write_timeout=60)
 EpicsSignalRO.set_defaults(connection_timeout=10, timeout=60)
 
 
 # Configure a Tiled writing client
 tiled_writing_client = from_profile("nsls2", api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_OPLS"])["opls"]["raw"]
+tiled_writing_client.context.http_client.headers['tiled-qos'] = 'acquisition'
 
 class TiledInserter:
     name = "opls"
@@ -54,6 +56,7 @@ configure_base(
 
 print("\nInitializing Tiled reading client...\nMake sure you check for duo push.")
 tiled_reading_client = from_profile("nsls2", username=None)["opls"]["raw"]
+tiled_reading_client.context.http_client.headers['tiled-qos'] = 'acquisition'
 
 db = Broker(tiled_reading_client)
 
