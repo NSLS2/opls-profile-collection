@@ -1,15 +1,11 @@
 [workspace]
 channels = ["conda-forge"]
 name = "opls-profile-collection"
-platforms = ["linux-64"]
+platforms = [{ platform = "linux-64", glibc = "2.17" }]
 version = "2026.2.0"
-
 
 [activation.env]
 REDIS_HOST="xf12id1-opls-redis1.nsls2.bnl.gov"
-
-[system-requirements]
-libc = "2.17"
 
 [feature.profile.dependencies]
 bluesky-base = "==1.15.0"
@@ -39,11 +35,9 @@ epicscorelibs = ">=7.0.7.99.1.1,<8"
 bluesky-tiled-plugins = "==2.0.2"
 ophyd-async = ">=0.13.7,<0.14"
 
-
 [feature.profile.pypi-dependencies]
 hasyutils = ">=2.1.0, <3"
 pvxslibs = ">=1.3.2, <2"
-
 
 [feature.qs.dependencies]
 bluesky-queueserver = "*"
@@ -56,7 +50,6 @@ bluesky-httpserver = "*"
 # systemd units
 qs-backend = "start-re-manager --profile-dir=."
 qs-server = "uvicorn --host localhost --port 60610 bluesky_httpserver.server:app"
-
 
 [feature.terminal.dependencies]
 ipython = ">=9.5.0"
