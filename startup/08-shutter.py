@@ -125,3 +125,11 @@ def feedback_plan_on():
 def feedback_plan_off():
     yield from bps.mv(manual_PID_disable_pitch,'1')
     yield from bps.mv(manual_PID_disable_roll,'1')
+
+
+
+def beam_on():
+    yield from bps.mv(shutter,1)
+
+def beam_off():
+    yield from bps.mv(shutter,0)

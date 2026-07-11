@@ -90,12 +90,12 @@ class Lambda(SingleTriggerV33, LambdaDetector):
 
 class LambdaLegacy(Lambda):
     oper_mode = Cpt(EpicsSignal, 'cam1:OperatingMode')
-    threshold_mode = Cpt(EpicsSignal, 'cam1:DualMode')
+    threshold_mode = Cpt(EpicsSignal, 'cam1:DualMode', kind="config")
 
     def stage(self, *args, **kwargs):
         self.oper_mode.set(3) # 24 bit mode
         self.cam.gating_mode.set(0) # Turn off gating mode
-        self.cam.charge_summing.set(1) # Enable charge summing
+        # self.cam.charge_summing.set(1) # Enable charge summing
         self.threshold_mode.set(0) # Single threshold mode
         super().stage(*args, **kwargs)
 
@@ -108,15 +108,15 @@ class LambdaXSPD(Lambda):
     def stage(self, *args, **kwargs):
         self.bit_depth.set(3) # 24 bit operation
         self.threshold_mode.set(0) # Single threshold mode
-        self.cam.charge_summing.set(1) # Enable charge summing
+        self.cam.charge_summing.set(0) # Disable charge summing
         self.cam.gating_mode.set(0) # Disable gating mode
 
         return super().stage(*args, **kwargs)
 
 
 
-#lambda_det = LambdaLegacy('XF:12ID1-ES{Det:Lambda}', name='lambda250k')
-lambda_det = LambdaXSPD('XF:12ID1-ES{XSPD-Det:2}', name='lambda250k')
+lambda_det = LambdaLegacy('XF:12ID1-ES{Det:Lambda}', name='lambda250k')
+# lambda_det = LambdaXSPD('XF:12ID1-ES{XSPD-Det:2}', name='lambda250k')
 lambda_det.tiff.kind = 'hinted'
 
 lambda_det.roi1.kind = 'hinted'
@@ -135,9 +135,9 @@ lambda_det.stats4.total.kind = 'hinted'
 lambda_det.stats4.kind = 'hinted'
 lambda_det.stats4.max_value.kind = 'hinted'
 
-lambda_det.stats5.kind = 'hinted'
-lambda_det.stats5.total.kind = 'hinted'
-lambda_det.stats5.max_value.kind = 'hinted' ## HZ
+# lambda_det.stats5.kind = 'hinted'
+# lambda_det.stats5.total.kind = 'hinted'
+# lambda_det.stats5.max_value.kind = 'hinted' ## HZ
 
 lambda_det.cam.ensure_nonblocking()
 
