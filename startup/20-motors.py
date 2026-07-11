@@ -45,3 +45,9 @@ asth =  ROT("XF:12ID1-ES{Smpl-Ax:", name ="asth")
 #    # asth = Cpt(EpicsMotor, "{Smpl-Ax:Th}Mtr, doc="Sample rotation")
 
 # asth = Cpt(EpicsMotor, "XF:12ID1-ES{Smpl-Ax:Th}Mtr", doc="Sample rotation", name = 'asth')
+
+
+'''
+x2 range for XRF cover, [-78, 50]
+
+'''

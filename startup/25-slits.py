@@ -85,7 +85,17 @@ op_slitx = output_slit.x
 
 
 
+def set_S2Size(gap_size=[0.5, 0.08]):
+    '''set the size of S2 slits (H x V) in mm
+    '''
+    hg_current = S2.hg.position
+    vg_current = S2.vg.position
+    print(f'Current S2 size: {hg_current:.3f} (H) x {vg_current:.3f} (V) mm')
 
+    hg,vg = gap_size
+    yield from bps.mv(S2.hg, hg)
+    yield from bps.mv(S2.vg, vg)
+    print(f'Set S2 size: {hg:.3f} (H) x {vg:.3f} (V) mm')
 
 
 

@@ -423,12 +423,21 @@ class Geometry(PseudoPositioner):
             sh_total = ( 
              -(self.L2.get() + self.L4.get()) * np.tan(_alpha) / np.cos(_tth)
             ) + 0*self.SH_OFF.get()
-            if sh_total >= -20 and sh_total < 1:
+
+            sh2_limit = -16
+            # if sh_total >= -20 and sh_total < 1:
+            #     sh=0
+            #     sh2 = sh_total
+            # if sh_total < -20:
+            #     sh = sh_total +20
+            #     sh2 = -20
+            if sh_total >= sh2_limit and sh_total < 1:
                 sh=0
                 sh2 = sh_total
-            if sh_total < -20:
-                sh = sh_total +20
-                sh2 = -20
+            if sh_total < sh2_limit:
+                sh = sh_total - sh2_limit
+                sh2 = sh2_limit
+
             if sh_total >= 1:
                 sh2 = 1
                 sh =sh_total-1
