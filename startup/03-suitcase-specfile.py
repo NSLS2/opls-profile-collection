@@ -267,9 +267,17 @@ lambda_fields_selected = ['lambda_1',
                           'lambda_max'
                           ]
 
+
+pilatus100k_fields_selected = ['p100k_1',
+                               'p100k_2',
+                               'p100k_3',
+                          ]
+
+
 def _get_det_fields_reflection(start):
     '''clean up the fields from reflectivity. HZ, 01/22/2024'''
     plan_name = _get_plan_name(start)
+    detector_names = _get_detector_names(start)
     
     if plan_name in _SCANS_REFLECTION:
         # quadem_fields_xrr = ['quadem_current2_mean_value', 'quadem_current3_mean_value']
@@ -278,13 +286,24 @@ def _get_det_fields_reflection(start):
         #                      'lambda_det_stats2_total',
         #                      'lambda_det_stats3_total',
         #                      ]
-        lambda_fields_xrr =['lambda_1',
-                            'lambda_2',
-                            'lambda_3',
-                            ]
+
         additional_fields = ['attenuation'
                              ]
-    return additional_fields+quadem_fields_xrr+lambda_fields_xrr
+        
+        if 'lambda250k' in detector_names:
+            lambda_fields_xrr =['lambda_1',
+                                'lambda_2',
+                                'lambda_3',
+                                ]
+            return additional_fields+quadem_fields_xrr+lambda_fields_xrr
+        elif 'pilatus100k' in detector_names:
+            p100k_fields_xrr =['p100k_1',
+                               'p100k_2',
+                               'p100k_3',
+                                ]
+            return additional_fields+quadem_fields_xrr+p100k_fields_xrr
+        else:
+            return additional_fields+quadem_fields_xrr
 
 def _get_scan_data_column_names(start, primary_descriptor):
     '''Modified to include customized fields for reflectivity. HZ, 01/22/2024
@@ -308,9 +327,12 @@ def _get_scan_data_column_names(start, primary_descriptor):
         if 'quadem' in detector_names:
             read_fields += quadem_fields_selected
             detector_included.append('quadem')
-        elif 'lambda_det' in detector_names:
+        elif 'lambda250k' in detector_names:
             read_fields += lambda_fields_selected
-            detector_included.append('lambda_det')
+            detector_included.append('lambda250k')
+        elif 'pilatus100k' in detector_names:
+            read_fields += pilatus100k_fields_selected
+            detector_included.append('pilatus100k')
 
         read_fields += [k for k, v in primary_descriptor['data_keys'].items()
             if (v['object_name'] not in motor_names
@@ -444,7 +466,8 @@ def to_spec_scan_data(start, primary_descriptor, event):
 
     # for additional columns, HZ testing
     md['values'] = [event['data'].get(k, None) for k in data_keys]
-
+    
+    detector_names = _get_detector_names(start)
     if _get_plan_name(start) in ['lscan_pseudo']: ## addtional col for normalization
 
         # quadem3_expo_integrated = event['data']['quadem_current3_mean_value']*event['data']['exposure_time']
@@ -456,17 +479,28 @@ def to_spec_scan_data(start, primary_descriptor, event):
         energy = start.get('energy')
         wvlength = 12.39842 / (0.001 * energy)  #in A
         qz = abs(2*np.pi/wvlength*(np.sin(np.deg2rad(event['data']['geo_alpha'])) + np.sin(np.deg2rad(event['data']['geo_beta']))))
+        
+        ## for lambda
+        if 'lambda250k' in detector_names:
+            # lambda_det_stats2_sub_stats13 = event['data']['lambda_det_stats2_total'] - 0.5*(event['data']['lambda_det_stats1_total'] + event['data']['lambda_det_stats3_total'])
+            lambda_det_stats2_sub_stats13 = event['data']['lambda_2'] - 0.5*(event['data']['lambda_1'] + event['data']['lambda_3'])
+            # lambda_det_stats2_sub_stats13_alpha4 = lambda_det_stats2_sub_stats13 * event['data']['geo_alpha']**4
 
-        # lambda_det_stats2_sub_stats13 = event['data']['lambda_det_stats2_total'] - 0.5*(event['data']['lambda_det_stats1_total'] + event['data']['lambda_det_stats3_total'])
-        lambda_det_stats2_sub_stats13 = event['data']['lambda_2'] - 0.5*(event['data']['lambda_1'] + event['data']['lambda_3'])
-        # lambda_det_stats2_sub_stats13_alpha4 = lambda_det_stats2_sub_stats13 * event['data']['geo_alpha']**4
-
-        lambda_det_stats2_sub_stats13_qz4 = lambda_det_stats2_sub_stats13 * qz**4
-        md['values'].append(qz) 
-        md['values'].append(lambda_det_stats2_sub_stats13) 
-        md['values'].append(lambda_det_stats2_sub_stats13_qz4)
-        md['values'].append(quadem3_expo_integrated_attenuated) # monitor x exposure_time
-
+            lambda_det_stats2_sub_stats13_qz4 = lambda_det_stats2_sub_stats13 * qz**4
+            md['values'].append(qz) 
+            md['values'].append(lambda_det_stats2_sub_stats13) 
+            md['values'].append(lambda_det_stats2_sub_stats13_qz4)
+            md['values'].append(quadem3_expo_integrated_attenuated) # monitor x exposure_time
+        ## to use pilatus100k
+        elif 'pilatus100k' in detector_names:
+            p100k_stats2_sub_stats13 = event['data']['p100k_2'] - 0.5*(event['data']['p100k_1'] + event['data']['p100k_3'])
+            p100k_stats2_sub_stats13_qz4 = p100k_stats2_sub_stats13 * qz**4
+            md['values'].append(qz) 
+            md['values'].append(p100k_stats2_sub_stats13) 
+            md['values'].append(p100k_stats2_sub_stats13_qz4)
+            md['values'].append(quadem3_expo_integrated_attenuated) # monitor x exposure_time
+        else:
+            md['values'].append(qz) 
     return _SPEC_EVENT_TEMPLATE.render(md)
 
 
