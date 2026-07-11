@@ -103,6 +103,17 @@ def check_tth_pseudo(detector=lambda_det):
     yield from bps.mv(shutter,0) # close shutter
 
 
+### need to use reflected beam at 2
+## S2.hg = 2, abs2 = -1.5
+## mabt(2,2,0)
+## RE(bp.rel_scan([lambda_det,quadem],tth,-0.1,0.1,21, per_step=shutter_flash_scan))
+## set_tth
+## close S2.hg = 0.2
+## RE(bp.rel_scan([lambda_det,quadem],S2.hc,-0.5,0.5,21, per_step=shutter_flash_scan))
+## go the S2 center
+
+
+
 
         
 # def check_astth(detector=lambda_det):
@@ -128,9 +139,9 @@ def check_tth_pseudo(detector=lambda_det):
 
 
 
-def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, finescan=False):
+def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, atten_2=5, finescan=False):
    
-    yield from bps.mv(abs2,5)
+    yield from bps.mv(abs2,atten_2)
     yield from mabt(alpha,alpha,0)
     yield from bps.sleep(1)
     yield from mabt(alpha,alpha,0)
@@ -152,14 +163,14 @@ def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, finesc
         yield from dscanr(geo.sh, -0.5*range,0.5*range, npts, time)
 
 
-def sample_height_set_fine_o(value=3, finescan=True):
-    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 2, finescan=finescan)
+def sample_height_set_fine_o(atten_2=5, finescan=True):
+    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 2, atten_2=atten_2, finescan=finescan)
 
 def sample_height_set_coarse(value=0):
     yield from sample_height(alpha=0.06, range=4,npts=31,time=0.5,settle_time = 0.5, finescan=False)
 
 def sample_height_set_coarse1(value=0):
-    yield from sample_height(alpha=0.06, range=5,npts=41,time=0.5,settle_time = 0.5, finescan=False)
+    yield from sample_height(alpha=0.06, range=6,npts=41,time=0.5,settle_time = 0.5, finescan=False)
 
 def sample_height_set_coarse2(value=0):
     yield from sample_height(alpha=0.06, range=1.5,npts=31,time=0.5,settle_time = 0.5, finescan=False)
@@ -183,7 +194,7 @@ def check_slitX2():
     yield from mabt(0,0,0) 
     yield from bps.mv(asth.rot,15.147)   #move the second absorber in 
     yield from bps.mv(sh, -1)
-    yield from dscanr(slit_x2, -1, 1, 41, 0.5)
+    yield from dscanr(slit_x2, -0.5, 0.5, 41, 0.5)
 
 
 def check_block_slit():
@@ -223,7 +234,10 @@ def check_slitX2_block(block_offset=1):
 
 
 def slitX2_out(offset=15):
-    slit_x2_max = max(-1*x2.position-offset, -58)
+    low_limit = slit_x2.limits[0]
+    low_limit_offset = 1.5
+    slit_x2_max = max(-1*x2.position-offset, low_limit+low_limit_offset)
+    print(f'target position is {slit_x2_max}.')
     yield from bps.mov(slit_x2,slit_x2_max)
     print('slit_x2 is out.')
 
@@ -274,7 +288,7 @@ def check_astth():
     yield from mabt(0,0,0)
     yield from bps.mvr(sh,-2)
     print('resetting astth')
-    yield from dscanr(astth, 0.06, -0.06, 25, 0.5)
+    yield from dscanr(astth, -0.06, 0.06, 25, 0.5)
     yield from bps.mvr(sh,2)
 
 

@@ -249,3 +249,23 @@ def gisaxs_waxs_scan(scan_dict={}, md=None, detectors = [pilatus1m, pilatus300k]
                           alphai=alphai,
                           scan_dict=scan_dict,
                           sh_offset = sh_offset)
+
+
+
+
+# def gisaxs_setup():
+
+#     '''
+#     beam in center gap
+    
+#     SAXSY1: 15
+#     SAXSY2: 25
+#     det2_off(SAXS): -10.8
+#     det x = -0.5
+#     det y = 0
+#     bs_x: -15.94
+#     bs_y: 25
+
+#     '''
+
+

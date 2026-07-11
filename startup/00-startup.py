@@ -44,6 +44,7 @@ class TiledInserter:
             raise error
 
 tiled_inserter = TiledInserter()
+# tiled_inserter = BufferingWrapper(tiled_inserter)
 
 configure_base(
     get_ipython().user_ns,
