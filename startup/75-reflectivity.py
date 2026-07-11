@@ -34,13 +34,15 @@ def reflection_scan_full(scan_param, md=None, detector=lambda_det, tilt_stage=Fa
                 'proposal_number': RE.md['proposal_number'] + '_' + RE.md['main_proposer'],
                 'detectors': [detector.name, quadem.name],
                 'energy': energy.energy.position,
-                # 'rois': [detector.roi1.min_xyz.min_x.get(), ### before TRANS (rot270)
+
+                # ### for pilatus100k
+                # 'rois': [detector.roi1.min_xyz.min_x.get(), ### before TRANS (rot270), 
                 #             detector.roi1.min_xyz.min_y.get(),
                 #             detector.roi2.min_xyz.min_y.get(),
                 #             detector.roi3.min_xyz.min_y.get(),
                 #             detector.roi2.size.x.get(),
                 #             detector.roi2.size.y.get()],
-
+                ## for lambda
                 'rois': [detector.roi1.min_xyz.min_x.get(), ### after TRANS1 (rot270), 2025/03/27, HZ
                          detector.roi2.min_xyz.min_x.get(),
                          detector.roi3.min_xyz.min_x.get(),
@@ -83,14 +85,12 @@ def reflection_scan_full(scan_param, md=None, detector=lambda_det, tilt_stage=Fa
         hinted_ref() ## change hinted settings
 
 print(f'Loading {__file__}')
-all_area_dets = [quadem, lambda_det, AD1, AD2, o2_per, chiller_T, ls]
-#all_area_dets = [quadem, bpm, lambda_det, AD1, AD2, o2_per, chiller_T]
-
-
+all_area_dets = [quadem, lambda_det, AD1, AD2, o2_per, chiller_T, ls] # Regular XR mode using Lambda
+# all_area_dets = [quadem, bpm, lambda_det, AD1, AD2, o2_per, chiller_T]
+# all_area_dets = [quadem, pilatus100k, AD1, AD2, o2_per, chiller_T, ls] # Backup XR mode using Pilatus100k
 
 
 @bpp.stage_decorator(all_area_dets)
-
 def reflection_scan_old(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,x2_nominal=0,blocky_nominal=0, usekibron = False, auto_atten = False, trough = None, compress = False, target_pressure=0):
 
     alpha_start =   scan_param["start"][i]
@@ -264,7 +264,7 @@ def read_shutter():
 
 def find_abs(alpha1, precount_time, abs_last1):
     threshold = 2e3
-    threshold = 1e3
+ 
 
     # this is the starting attenuator based on the table
     abs_start = get_abs2_alpha_position(alpha1)
@@ -290,7 +290,6 @@ def find_abs(alpha1, precount_time, abs_last1):
         i_max4 = ret['lambda_4_max']['value']
         r_max4= i_max4/precount_time
 
-
         i_4 = ret['lambda_4']['value']
         i_2 = ret['lambda_2']['value']
         r_4= i_4/precount_time
@@ -298,27 +297,48 @@ def find_abs(alpha1, precount_time, abs_last1):
         # look at the maximum count of the pre-count and adjust the default attenuation, can do multiple iterations
         print("COUNT RATES: i4max:i4,r4max:r4", i_max4, i_4,r_max4,r_4)
         print("COUNT RATES: i2,:r2", i_2,r_2)
-
-
-        if i_max4 != 0.0:
-            abs_final = int(abs_start + np.floor(np.log10(r_max4/1.0/threshold)))
+        
+# This uses region 2
+        if i_2 != 0.0:
+            abs_final = int(abs_start + np.floor(np.log10(r_2/14/threshold)))
         else:
             abs_final = abs_last1
 # this allows to remove at most 2 attenuators
         if abs_final- abs_start <= -3:
             abs_final=int(abs_start-3)
-        if r_4 < 2.0e3:
+        if r_2 < 2.0e3:
             abs_final = abs_final -1
-        if r_4 > 2.0e4:
+        if r_2 > 5e5:
             abs_final = abs_final +1
-        if r_4 > 2.0e5:
-            abs_final = abs_final +1
+        if r_2 > 2.0e6:
+            abs_final = abs_final +2
         if abs_final <0:
             abs_final =0
-        if abs_final >5:  abs_final =5
+        if abs_final >6:  abs_final =6
         print(f"initial attenuator : final attenuator : last value {abs_start} : {abs_final}: {abs_last1}")
         abs_last1=abs_final
         return abs_final, abs_last1
+        
+# This uses region 4
+#         if i_max4 != 0.0:
+#             abs_final = int(abs_start + np.floor(np.log10(r_max4/1.0/threshold)))
+#         else:
+#             abs_final = abs_last1
+# # this allows to remove at most 2 attenuators
+#         if abs_final- abs_start <= -3:
+#             abs_final=int(abs_start-3)
+#         if r_4 < 2.0e3:
+#             abs_final = abs_final -1
+#         if r_4 > 2.0e4:
+#             abs_final = abs_final +1
+#         if r_4 > 2.0e5:
+#             abs_final = abs_final +1
+#         if abs_final <0:
+#             abs_final =0
+#         if abs_final >5:  abs_final =5
+#         print(f"initial attenuator : final attenuator : last value {abs_start} : {abs_final}: {abs_last1}")
+#         abs_last1=abs_final
+#         return abs_final, abs_last1
 
 
 @bpp.stage_decorator(all_area_dets)
@@ -427,7 +447,7 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
         yield from bps.mv(attenuation_factor_signal, att_bar1['attenuator_aborp'][att])
         yield from bps.mv(attenuator_name_signal, att_bar1['name'][att])
 #        print("1", att_bar1['attenuator_aborp'][att], att_bar1['name'][att])
-#hanging on the following line
+#        hanging on the following line
         if att_fact_selected != None:
             yield from bps.mv(attenuation_factor_signal, att_fact_selected[f'att{att}'])
 #            print("1", att_fact_selected[f'att{att}'])
@@ -438,7 +458,8 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
         yield from bps.mv(shutter, 1)
 
         # print(time.time()-start_time)
-        yield from det_set_exposure([quadem,lambda_det], exposure_time=exp_time, exposure_number = 1)
+        # yield from det_set_exposure([quadem,lambda_det], exposure_time=exp_time, exposure_number = 1)
+        yield from det_set_exposure([quadem,detector], exposure_time=exp_time, exposure_number = 1)
 
       #  print(time.time()-start_time)
         yield from bps.trigger_and_read(all_area_dets +
@@ -559,7 +580,7 @@ def calc_att_auto(alphai, precount_time=1,detector=lambda_det):
 
 
 #print(f'Loading {__file__}')
-all_area_dets = [quadem, lambda_det, AD1, AD2, o2_per, chiller_T]
+# all_area_dets = [quadem, lambda_det, AD1, AD2, o2_per, chiller_T]
 #all_area_dets = [quadem, bpm, lambda_det, AD1, AD2, o2_per, chiller_T]
 
 
