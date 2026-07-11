@@ -90,7 +90,8 @@ class Attenuator():
         elif energy_select < 17000:
             att_mater = 'Cu_16.1keV'
         else:
-            att_mater = 'Al_23keV'
+            # att_mater = 'Al_23keV'
+            att_mater = 'Al_22keV' # now using 22keV
         
         if verbosity <= 1:
             print(f'E = {energy_select:.1f}eV, selected attenuator: {att_mater}.')
