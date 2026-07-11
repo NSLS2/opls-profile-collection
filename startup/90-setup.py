@@ -29,12 +29,13 @@ det_roi_renaming = {
     lambda_det.stats3.total: 'lambda_3',
     lambda_det.stats4.total: 'lambda_4',
     lambda_det.stats4.max_value: 'lambda_4_max',
-    lambda_det.stats5.total: 'lambda_sum',
-    lambda_det.stats5.max_value: 'lambda_max',
+    # lambda_det.stats5.total: 'lambda_sum',
+    # lambda_det.stats5.max_value: 'lambda_max',
 
     pilatus100k.stats1.total : 'p100k_1',
     pilatus100k.stats2.total : 'p100k_2',
-    
+    pilatus100k.stats3.total : 'p100k_3',
+
     pilatus100kA.stats1.total : 'p100kA_1',
     pilatus100kA.stats2.total : 'p100kA_2',
 
@@ -130,7 +131,8 @@ def set_mode(mode):
 mode_to_det_mapping = {
     "Alignment":    [quadem],
     "Soller":       [pilatus100kA,quadem],
-    "XR":           [lambda_det,quadem],
+    "XR":           [lambda_det,quadem], # normal XR using Lambda
+    # "XR":           [pilatus100k,quadem], # backup XR using pilatus100k
     "GISAXS":       [pilatus1m,quadem], #[pilatus1m,quadem],
     "GIWAXS":       [pilatus300k,quadem], #[pilatus300k,quadem],
     "XRF":          [xs,quadem],
@@ -140,10 +142,12 @@ mode_to_det_mapping = {
 mode_to_roi_mapping = {
     "Alignment":    quadem.current3.mean_value.name,
     "Soller":       pilatus100kA.stats2.total.name,
-    "XR":           lambda_det.stats2.total.name,
+    "XR":           lambda_det.stats2.total.name, # normal XR using Lambda
+    # "XR":           pilatus100k.stats2.total.name, # backup XR using pilatus100k
     "GISAXS":       pilatus1m.stats2.total.name, #pilatus1m.stats2.total.name,
     "GIWAXS":       pilatus300k.stats2.total.name, #pilatus300k.stats2.total.name,
-    "XRF":          lambda_det.stats2.total.name,
+    "XRF":          lambda_det.stats2.total.name, # normal XR using Lambda
+    # "XRF":          pilatus100k.stats2.total.name, # backup XR using pilatus100k
     "BAD":          None,
     }
 
@@ -159,10 +163,12 @@ mode_to_roi_mapping = {
 mode_to_plt_mapping = {
     "Alignment":    quadem.current3.mean_value.name,
     "Soller":       pilatus100kA.stats2.total.name,
-    "XR":           lambda_det.stats2.total.name,
+    "XR":           lambda_det.stats2.total.name, # normal XR using Lambda
+    # "XR":           pilatus100k.stats2.total.name, # backup XR using pilatus100k
     "GISAXS":       pilatus1m.stats2.total.name,
     "GIWAXS":       pilatus300k.stats2.total.name, # pilatus300k.stats2.total.name,
-    "XRF":          lambda_det.stats2.total.name,
+    "XRF":          lambda_det.stats2.total.name, # normal XR using Lambda
+    # "XRF":          pilatus100k.stats2.total.name, # backup XR using pilatus100k
     "BAD":          None,
     }
     
