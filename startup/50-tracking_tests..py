@@ -31,6 +31,8 @@ def phi_track_show():
 
 
 def ih_track(alpha_ini, alpha_stop, num_alpha):
+
+    yield from beam_on()
     # for ih in range(alpha_ini,alpha_stop, nb_alpha):
     for i in [2,3]:
         #getattr(tetramm, f"current{i}").mean_value.kind = "hinted"

@@ -253,6 +253,12 @@ def slitX2_in():
     print('slit_x2 is in.')
 
 
+def slitX2_in_edge():
+    x2_position_original = x2.position
+    yield from bps.mov(slit_x2,slit_x2_offset_edge-x2_position_original)
+    print('slit_x2 edge is in.')
+
+
 def check_ih():
     '''Align the spectrometer ih stage
     '''
