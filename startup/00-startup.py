@@ -1,4 +1,8 @@
 import logging
+import os
+
+os.environ.pop("PYEPICS_LIBCA", None)
+
 
 from nslsii import configure_base
 from IPython import get_ipython
@@ -11,7 +15,6 @@ from event_model import RunRouter
 import event_model
 from pathlib import Path
 from tiled.client import from_profile
-import os
 from databroker import Broker
 from tiled.queries import Key, Regex
 from pprint import pprint

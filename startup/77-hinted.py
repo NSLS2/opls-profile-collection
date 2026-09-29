@@ -50,48 +50,10 @@ def unhinted_ref():
 
 
 
-##### Hinted settings for quadem detector
-# omitted setting for quadem detector to clean up the data table() in databroker or spec-like file
-def omitted_quadem(kind='omitted'):
-    '''
-    The omitted attributes will not show in the data table. 
-    Note: The original setting is "normal"
-    '''
-    detector = quadem
-    attrs_list = ['position_offset_calc_x', 'position_offset_calc_y', 
-                  'position_offset_x', 'position_offset_y', 
-                  'position_scale_x', 'position_scale_Y',
-                  'em_range'
-                  ]
-    hinted_det(detector, attrs_list, kind)
-
-    # some configuration attrs have read_attrs, need to asign a kind to all of them
-    config_names = ['current_names', 'current_offsets', 'current_offset_calcs', 'current_scales']
-    read_attrs = [f'ch{i}' for i in range(1,5)]
-    for config_name in config_names:
-        hinted_det(getattr(detector,config_name), read_attrs, kind)
-
-
-# Hinted setting for quadem detector, mean_value channels
-def hinted_quadem_mean(channel_list=[2,3], attrs_list=['mean_value']):
-    '''
-    Set selected channels in quadem to be hinted
-    first set all 4 channels to normal, then hinted for selected channels
-    '''
-    for i in range(1,5):
-        hinted_det(getattr(quadem, f"current{i}"), attrs_list, kind='normal')
-
-    for k in channel_list:
-        hinted_det(getattr(quadem, f"current{k}"), attrs_list, kind='hinted')
-
-
-
-#### TODO need to check omitted.
-# quadem.current_names.ch2.kind = 'omitted'
-
-
-
-
+def hinted_quadem_mean(channel_list=(2, 3)):
+    """Select the QuadEM current means emitted and hinted by future scans."""
+    signals = tuple(quadem.current[index].mean_value for index in channel_list)
+    quadem.configure_readables(signals, hinted_signals=signals)
 
 # Hinted setting for lambda detector, 
 def hinted_lambda_single(channel, kind='hinted'):
@@ -133,26 +95,6 @@ def print_attrs_kind(detector):
         if hasattr(config, 'kind'):
             print(config_name, config.kind.value)
 
-def print_attrs_kind_quandem():
-    '''
-    print configuration_attrs that are shown in data table
-    '''
-    config_names = ['current_names', 'current_offsets', 'current_offset_calcs', 'current_scales',
-                    'position_offset_calc_x', 'position_offset_calc_y', 
-                    'position_offset_x', 'position_offset_y', 
-                    'position_scale_x', 'position_scale_Y',
-                    'em_range'
-                  ]
-
-    detector = quadem
-    for config_name in config_names:
-        config = getattr(detector,config_name)
-        if hasattr(config, 'kind'):
-            print(config_name, config.kind.value)
-        if hasattr(config, 'read_attrs'):
-            read_attrs = getattr(config, 'read_attrs')
-            for read_attr in read_attrs:
-                print(read_attr, getattr(config, read_attr).kind.value)
 
 
 
@@ -161,70 +103,6 @@ def print_attrs_kind_motors():
     for one_motor in motor_list:
         print(one_motor.name, one_motor.user_readback.kind)
 
-def spec_writer_omit():
-
-    fields = [
-        quadem.current1.mean_value, 
-        quadem.current4.mean_value, 
-        quadem.current_names.ch1, 
-        quadem.current_names.ch2, 
-        quadem.current_names.ch3, 
-        quadem.current_names.ch4, 
-        quadem.current_offset_calcs.ch1, 
-        quadem.current_offset_calcs.ch2, 
-        quadem.current_offset_calcs.ch3, 
-        quadem.current_offset_calcs.ch4, 
-        quadem.current_offsets.ch1, 
-        quadem.current_offsets.ch2, 
-        quadem.current_offsets.ch3, 
-        quadem.current_offsets.ch4,
-        quadem.current_scales.ch1,
-        quadem.current_scales.ch2,
-        quadem.current_scales.ch3,
-        quadem.current_scales.ch4,
-        quadem.em_range, 
-        quadem.position_offset_calc_x, 
-        quadem.position_offset_calc_y, 
-        quadem.position_offset_x, 
-        quadem.position_offset_y, 
-        quadem.position_scale_x, 
-        quadem.position_scale_Y, 
-    ]
-    for f in fields:
-        f.kind = 'omitted'
-
-
-def spec_writer_normal():
-
-    fields = [
-        quadem.current1.mean_value, 
-        quadem.current4.mean_value, 
-        quadem.current_names.ch1, 
-        quadem.current_names.ch2, 
-        quadem.current_names.ch3, 
-        quadem.current_names.ch4, 
-        quadem.current_offset_calcs.ch1, 
-        quadem.current_offset_calcs.ch2, 
-        quadem.current_offset_calcs.ch3, 
-        quadem.current_offset_calcs.ch4, 
-        quadem.current_offsets.ch1, 
-        quadem.current_offsets.ch2, 
-        quadem.current_offsets.ch3, 
-        quadem.current_offsets.ch4,
-        quadem.current_scales.ch1,
-        quadem.current_scales.ch2,
-        quadem.current_scales.ch3,
-        quadem.current_scales.ch4,
-        quadem.em_range, 
-        quadem.position_offset_calc_x, 
-        quadem.position_offset_calc_y, 
-        quadem.position_offset_x, 
-        quadem.position_offset_y, 
-        quadem.position_scale_x, 
-        quadem.position_scale_Y, 
-    ]
-    for f in fields:
-        f.kind = 'normal'
 
 
 

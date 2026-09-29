@@ -1,28 +1,10 @@
 
-# roi_renaming_mapping = {
-
-#     'quadem_current2_mean_value': 'mon_2', 
-#     'quadem_current3_mean_value': 'mon_3',
-
-#     'lambda_det_stats1_total': 'lam_1',
-#     'lambda_det_stats2_total': 'lam_2',
-#     'lambda_det_stats3_total': 'lam_3',
-#     'lambda_det_stats4_total': 'lam_4',
-#     'lambda_det_stats5_total': 'lam_5',
-#     'lambda_det_stats5_max_value': 'lam_max',
-
-#     'pilatus100k_stats1_total' : 'p100k_1',
-#     'pilatus100k_stats2_total' : 'p100k_2',
-
-#     'pilatus300k_stats1_total' : 'p300k_1',
-#     'pilatus300k_stats2_total' : 'p300k_2',
-# }
 
 
 det_roi_renaming = {
 
-    quadem.current2.mean_value: 'monitor_2', 
-    quadem.current3.mean_value: 'monitor_3',
+    quadem.current[2].mean_value: 'monitor_2',
+    quadem.current[3].mean_value: 'monitor_3',
 
     lambda_det.stats1.total: 'lambda_1',
     lambda_det.stats2.total: 'lambda_2',
@@ -46,8 +28,11 @@ det_roi_renaming = {
     pilatus1m.stats2.total : 'p1m_2',
 }
 
-for k,v in det_roi_renaming.items():
-    k.name = v
+for signal, name in det_roi_renaming.items():
+    if hasattr(signal, "set_name"):
+        signal.set_name(name)
+    else:
+        signal.name = name
 
 
 import matplotlib.pyplot as plt
@@ -140,7 +125,7 @@ mode_to_det_mapping = {
     }
 
 mode_to_roi_mapping = {
-    "Alignment":    quadem.current3.mean_value.name,
+    "Alignment":    quadem.current[3].mean_value.name,
     "Soller":       pilatus100kA.stats2.total.name,
     "XR":           lambda_det.stats2.total.name, # normal XR using Lambda
     # "XR":           pilatus100k.stats2.total.name, # backup XR using pilatus100k
@@ -151,17 +136,9 @@ mode_to_roi_mapping = {
     "BAD":          None,
     }
 
-# mode_to_plt_mapping = {
-#     "Alignment":    [quadem.current2.mean_value.name,quadem.current3.mean_value.name],
-#     "Soller":       [quadem.current3.mean_value.name,pilatus100k.stats2.total.name],
-#     "XR":           quadem.current3.mean_value.name, #lambda_det.stats2.total.name],
-#     "GISAXS":       [quadem.current3.mean_value.name,pilatus300k.stats2.total.name],
-#     "XRF":          [quadem.current3.mean_value.name,lambda_det.stats2.total.name],
-#     "BAD":          [],
-#     }
     
 mode_to_plt_mapping = {
-    "Alignment":    quadem.current3.mean_value.name,
+    "Alignment":    quadem.current[3].mean_value.name,
     "Soller":       pilatus100kA.stats2.total.name,
     "XR":           lambda_det.stats2.total.name, # normal XR using Lambda
     # "XR":           pilatus100k.stats2.total.name, # backup XR using pilatus100k
@@ -226,9 +203,7 @@ def bsui_scan(motor, position1, position2, npts, time, relative = False, reset =
     if printon: print("in #5")
     # if operating_mode  == "XR":
     #     detector_roi = lambda_det.stats2.total.name
-    #     table_cols = [motor_name, quadem.current3.mean_value.name]
     #chaning the names so that the printout isnt so long.
-    #quadem.current2.mean_value.name='bob'
     if printon: print("in #6")
     local_peaks = PeakStats(motor_name,roi_auto)
     if printon: print("in #7")

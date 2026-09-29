@@ -37,7 +37,7 @@ def det_set_exposure(detectors, exposure_time, exposure_period = None, exposure_
 
         elif det == quadem:
             yield from bps.mov(
-                det.averaging_time, exposure_time
+                det.driver.averaging_time, exposure_time
                 )
 
         else:

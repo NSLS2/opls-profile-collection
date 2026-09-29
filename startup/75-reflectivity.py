@@ -79,7 +79,7 @@ def reflection_scan_full(scan_param, md=None, detector=lambda_det, tilt_stage=Fa
         bec.enable_plots()
         # puts in absorber to protect the detctor      
         yield from bps.mv(abs2, 6)
-        quadem.averaging_time.put(1)
+        yield from bps.mv(quadem.driver.averaging_time, 1)
         print('The reflectivity scan is over')
     finally:
         hinted_ref() ## change hinted settings

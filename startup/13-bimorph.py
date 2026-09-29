@@ -59,8 +59,7 @@ def focus_set(voff_ini, voff_stop, num_voff, vector=9):
         #yield from bp.rel_scan([lambda_det,quadem], sh, -0.2,0.2, 10) 
         peak_lambda = peaks.max['lambda_det_stats2_total'][1]
         fwhm_lambda = peaks.fwhm['lambda_det_stats2_total']
-        quadem_mv = peaks.max["quadem_current3_mean_value"][1]
-        #print(peaks.cen["quadem_current3_mean_value"] 
+        quadem_mv = peaks.max["monitor_3"][1]
         dif[0, i] = voff_rel
         dif[1, i] = peak_lambda / quadem_mv  
         dif[2, i] = fwhm_lambda  
@@ -97,12 +96,11 @@ def focus_set_ih(voff_ini, voff_stop, num_voff, vector=9):
         yield from bp.rel_scan([lambda_det,quadem], ih, -0.1,0.1, 40) 
 
         #peak_lambda = peaks.max['lambda_det_stats2_total'][1]
-        peak_quadem =  peaks.max["quadem_current3_mean_value"][1]
+        peak_quadem =  peaks.max["monitor_3"][1]
         #fwhm_lambda = peaks.fwhm['lambda_det_stats2_total']
-        fwhm_quadem = peaks.fwhm["quadem_current3_mean_value"]
+        fwhm_quadem = peaks.fwhm["monitor_3"]
 
     
-        #print(peaks.cen["quadem_current3_mean_value"] 
         dif[0, i] = voff_rel
         dif[1, i] = peak_quadem
         dif[2, i] = fwhm_quadem  

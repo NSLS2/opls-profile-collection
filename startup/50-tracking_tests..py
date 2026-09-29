@@ -34,10 +34,6 @@ def ih_track(alpha_ini, alpha_stop, num_alpha):
 
     yield from beam_on()
     # for ih in range(alpha_ini,alpha_stop, nb_alpha):
-    for i in [2,3]:
-        #getattr(tetramm, f"current{i}").mean_value.kind = "hinted"
-        getattr(quadem, f"current{i}").mean_value.kind = "hinted"
-
 
     yield from bps.mv(geo.track_mode, 0) 
 
@@ -98,15 +94,16 @@ def ref1(abso, expo, alpha_ini, alpha_stop, num_alpha):
             yield from bp.scan([pilatus100k, quadem], alpha_re, 0, 0, 1, 
                             per_step=shutter_flash)
 
+            quadem_current3 = yield from bps.rd(quadem.current[3].mean_value)
             dif[0, i] = alpha_re
             dif[1, i] = pilatus100k.stats1.total.get()
             dif[2, i] = pilatus100k.stats2.total.get()
             dif[3, i] = pilatus100k.stats3.total.get()
-            dif[4, i] = quadem.current3.mean_value.get()
+            dif[4, i] = quadem_current3
 
             print(abso, expo, geo.alpha.position, pilatus100k.stats1.total.get(),\
                  pilatus100k.stats2.total.get(), pilatus100k.stats3.total.get(),\
-                 quadem.current3.mean_value.get()) 
+                 quadem_current3)
 
     # plt.figure()
     # plt.subplot(121)
@@ -151,16 +148,18 @@ def run_ref_nite(sample_name, cycle_num = 30):
         run_cycle += 1
 
 def print_func():
+    quadem_current3 = yield from bps.rd(quadem.current[3].mean_value)
     print(geo.alpha.position)
     print(pilatus100k.stats1.total.get())
     print(pilatus100k.stats2.total.get())
     print(pilatus100k.stats3.total.get())
-    print(quadem.current3.mean_value.get())
+    print(quadem_current3)
 
 def print_func1():
+    quadem_current3 = yield from bps.rd(quadem.current[3].mean_value)
     print(geo.alpha.position, pilatus100k.stats1.total.get(),\
          pilatus100k.stats2.total.get(), pilatus100k.stats3.total.get(),\
-         quadem.current3.mean_value.get())
+         quadem_current3)
 
 
 def refl_backup(j, num_alpha):
@@ -169,13 +168,14 @@ def refl_backup(j, num_alpha):
     if j == 0:
         dif = np.zeros((5, num_alpha))
 
-    print_func1()
+    yield from print_func1()
 
+    quadem_current3 = yield from bps.rd(quadem.current[3].mean_value)
     dif[0, j] = geo.alpha.position
     dif[1, j] = pilatus100k.stats1.total.get()
     dif[2, j] = pilatus100k.stats2.total.get()
     dif[3, j] = pilatus100k.stats3.total.get()
-    dif[4, j] = quadem.current3.mean_value.get()
+    dif[4, j] = quadem_current3
 
     plt.figure()
     plt.subplot(121)
@@ -271,15 +271,5 @@ def sleepy_step(*args, **kwargs):
         collect_plan_sleepy(*args, **kwargs),
         cleanup_plan_sleepy()
     )
-
-    def restore_beam():
-        yield from clear.suspenders()
-        yield from bps.rel_scan([quadem3_cl],dcm_pitch,-0.015,0.015,40)
-        #set up so that the center of mass works
-        tmp=peaks.cen['quadem_current3_mean_value']
-        yield from bps.mov(dcm_ptich,tmp)
-        RE.install_suspender(susp_xbpm2_sum)    
-        RE.install_suspender(susp_beam)
-        RE.install_suspender(susp_smi_shutter)
 
 

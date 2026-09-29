@@ -68,7 +68,7 @@ def reflection_fluorescence_scan_full(scan_param, md=None, detector=xs, tilt_sta
     print('The reflectivity_fluorescence scan is over')
     hinted_ref() ## change hinted settings
 
-    quadem.averaging_time.put(1)
+    yield from bps.mv(quadem.driver.averaging_time, 1)
     
 print(f'Loading {__file__}')
 all_area_dets_fluo = [saturate, quadem, xs, AD1, AD2, o2_per, chiller_T]
@@ -167,9 +167,6 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
             yield from bps.mv(shutter, 1)
             yield from bps.sleep(0.5)
 
-            # quadem.averaging_time.put(precount_time)
-            # yield from bps.trigger_and_read([quadem], name='precount')
-            # quadem.averaging_time.put(exp_time)
 
             yield from det_set_exposure(detectors_all, exposure_time=precount_time, exposure_number = 1)
             yield from bps.trigger_and_read([quadem], name='precount')
