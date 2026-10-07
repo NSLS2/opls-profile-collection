@@ -122,7 +122,7 @@ try:
     pilatus100kA = Pilatus("XF:12ID1-ES{Det:P100K-A}", name="pilatus100kA")
     set_detector(pilatus100kA)
 except:
-    print('Pilatus 100k is not connected')
+    print('Pilatus 100kA is not connected')
 
 
 try:

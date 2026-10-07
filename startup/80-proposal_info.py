@@ -1,6 +1,6 @@
 #set_project_name("ocko")
 #set_project_name("dutta")
-
+print(f'Loading {__file__}')
 def set_project_name(project_name, folder_num=1):
     RE.md['project_name'] = project_name
     current_dir = proposal_path() + f"projects/{project_name}/"

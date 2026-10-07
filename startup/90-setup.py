@@ -1,4 +1,4 @@
-
+print(f'Loading {__file__}')
 # roi_renaming_mapping = {
 
 #     'quadem_current2_mean_value': 'mon_2', 

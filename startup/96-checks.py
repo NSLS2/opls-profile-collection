@@ -87,6 +87,7 @@ def direct_beam():
 
 
 def check_tth_pseudo(detector=lambda_det):
+    '''need to be tested before use'''
     print('Align the spectrometer rotation angle')
     yield from bps.mv(geo.det_mode,1)
     yield from bps.mv(S2.hg, 2)
@@ -97,8 +98,8 @@ def check_tth_pseudo(detector=lambda_det):
     yield from bps.mv(sh,-1)
     yield from bps.mv(shutter,1) # open shutter
     yield from dscanr(geo.tth,-0.15, 0.15, 21, 0.1)
-    yield from bps.mv(S2.hg, 0.5)
-    yield from dscan(S2.hc,-1,1,21,0.1)
+    yield from bps.mv(S2.hg, 0.1)
+    yield from dscan(S2.hc,-0.1,0.1,21,0.1)
     yield from bps.mv(abs3,0)
     yield from bps.mv(shutter,0) # close shutter
 
@@ -176,25 +177,9 @@ def sample_height_set_coarse2(value=0):
     yield from sample_height(alpha=0.06, range=1.5,npts=31,time=0.5,settle_time = 0.5, finescan=False)
 
 
-slit_x2_offset_edge = 0 # 46.73 - 3.7 # 42.6131125 # updated, 09/30/25; 42.418  
-slit_x2_offset_gap = 10.3 # 57.139 - 3.7 # 53.006 # updated, 09/30/25, # 52.75273301552 # 53.9723 # 53.67 # 55.62 # center of the slit
-slit_x2_offset_block = slit_x2_offset_edge + 1 # 0.6  # 45.2 + 1.5 # plus 1.5 to block the beam
-# atten_slit =  -1.70856490 #-1.72081 # -1.775129
-# slit_x2_out = -60 # -9.5-3.7
-
-
-def check_slitX2():
-    '''Align the slit x2
-    '''
-    # do we keep old mode and reset
-    x2_position_original = x2.position
-    # print('move slit x2 in pre-determined position')
-    yield from bps.mov(slit_x2,slit_x2_offset_gap-x2_position_original)
-    yield from bps.mv(abs2,5)   #move the second absorber in 
-    yield from mabt(0,0,0) 
-    yield from bps.mv(asth.rot,15.147)   #move the second absorber in 
-    yield from bps.mv(sh, -1)
-    yield from dscanr(slit_x2, -0.5, 0.5, 41, 0.5)
+def blocker_out(offset=30):
+    yield from bps.mov(block.y, offset)
+    print('sample blocker is out.')
 
 
 def check_block_slit():
@@ -208,56 +193,6 @@ def check_block_slit():
     yield from bps.mv(asth.rot,15.147)   #move the second absorber in 
     yield from bps.mv(sh, -1)
     yield from dscanr(block.y, -1, 1, 41, 0.5)
-
-
-
-def check_slitX2_block(block_offset=1):
-    '''Align the slit x2 edge and block the beam by 0.5mm
-    '''
-    mode='Soller'
-    det=pilatus100kA
-    slit_offset = block_offset
-    x2_position_original = x2.position
-    # print('move slit x2 in pre-determined position')
-    yield from bps.mov(slit_x2,slit_x2_offset_edge-x2_position_original)
-    yield from set_mode(mode)
-    yield from mabt(0,0,0)
-    yield from bps.mov(sh, -1)
-    yield from bps.mv(abs2,5) 
-    yield from bp.rel_scan([det],slit_x2,-1,1,21,per_step=shutter_flash_scan)
-    peak_cen = ps_new(det='p100kA', suffix='_2', der=True, plot=False)
-    yield from bps.mov(slit_x2, peak_cen+slit_offset)
-
-    slit_x2_offset_block_new = x2.position + slit_x2.position
-    print(f'The new slit_x2_offset_block: {slit_x2_offset_block_new}')
-    return slit_x2_offset_block_new
-
-
-def slitX2_out(offset=15):
-    low_limit = slit_x2.limits[0]
-    low_limit_offset = 1.5
-    slit_x2_max = max(-1*x2.position-offset, low_limit+low_limit_offset)
-    print(f'target position is {slit_x2_max}.')
-    yield from bps.mov(slit_x2,slit_x2_max)
-    print('slit_x2 is out.')
-
-
-def blocker_out(offset=30):
-    yield from bps.mov(block.y, offset)
-    print('sample blocker is out.')
-
-
-def slitX2_in():
-    x2_position_original = x2.position
-    yield from bps.mov(slit_x2,slit_x2_offset_gap-x2_position_original)
-    print('slit_x2 is in.')
-
-
-def slitX2_in_edge():
-    x2_position_original = x2.position
-    yield from bps.mov(slit_x2,slit_x2_offset_edge-x2_position_original)
-    print('slit_x2 edge is in.')
-
 
 def check_ih():
     '''Align the spectrometer ih stage
