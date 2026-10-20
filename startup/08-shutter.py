@@ -84,7 +84,7 @@ manual_PID_disable_roll = EpicsSignal('XF:12IDB-BI:2{EM:BPM3}fast_pidX_incalc.CL
 
 
 
-def shopen(He=True):
+def shopen(He=False):
     yield from bps.mv(ph_shutter.open_cmd, 1)
     yield from bps.sleep(2)
     yield from bps.mv(manual_PID_disable_pitch, '0')
@@ -94,7 +94,7 @@ def shopen(He=True):
         # yield from he_start()
     
 
-def shclose(He=True):
+def shclose(He=False):
     yield from bps.mv(manual_PID_disable_pitch,'1')
     yield from bps.mv(manual_PID_disable_roll, '1')
     yield from bps.sleep(3)

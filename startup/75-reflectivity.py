@@ -223,7 +223,9 @@ def reflection_scan_old(scan_param, i, detector=lambda_det, md={}, tilt_stage=Fa
             yield from bps.trigger_and_read([quadem],name='precount')
         # yield from det_set_exposure([detector, quadem], exposure_time=exp_time, exposure_number = 1)
     
+        yield from bps.sleep(0.2)
         yield from bps.mv(shutter, 1)
+        yield from bps.sleep(0.2)
         yield from bps.trigger_and_read(all_area_dets +
                                             [geo] + 
                                             [S2] +
@@ -245,7 +247,7 @@ def det_exposure_time(exp_t, meas_t=1):
         lambda_det.cam.num_images, int(meas_t/exp_t))
 
 def get_abs2_alpha_position(alphai):
-    alpha_position_dict = {0:[1.3], 1:[0.8,1.3], 2:[0.4, 0.8], 3:[0.2, 0.4], 4:[0.02,0.2]}
+    alpha_position_dict = {0:[1.2], 1:[0.6,1.2], 2:[0.4, 0.6], 3:[0.2, 0.4], 4:[0.1,0.2], 5:[0.02,0.1]}
 
 
     for k, v in alpha_position_dict.items():
@@ -263,7 +265,8 @@ def read_shutter():
 
 
 def find_abs(alpha1, precount_time, abs_last1):
-    threshold = 2e3
+    '''TODO abs_last1 doesnt seem to work properly'''
+    threshold = 3e3
  
 
     # this is the starting attenuator based on the table
@@ -278,44 +281,49 @@ def find_abs(alpha1, precount_time, abs_last1):
     yield from read_shutter()
     ret = yield from bps.trigger_and_read([lambda_det], name='precount')
     yield from bps.mv(shutter, 0)
+    yield from bps.sleep(0.2)
     if ret is None:
         #this is if there is no object returned
         print('No count on the detector')
 # we should change this to use the intergral of region 2.
     else:
-        # Read the maximum count on a pixel from the detector
-    #    lambda_2
-    #    lambda_4
-      #  breakpoint()
+# Maximum count on a pixel from the detector
         i_max4 = ret['lambda_4_max']['value']
         r_max4= i_max4/precount_time
-
+# Integrated counts in a ROI
         i_4 = ret['lambda_4']['value']
         i_2 = ret['lambda_2']['value']
+# Rates on the detector
         r_4= i_4/precount_time
         r_2= i_2/precount_time
         # look at the maximum count of the pre-count and adjust the default attenuation, can do multiple iterations
-        print("COUNT RATES: i4max:i4,r4max:r4", i_max4, i_4,r_max4,r_4)
+        print("\nCOUNT RATES: i4max:i4,r4max:r4", i_max4, i_4,r_max4,r_4)
         print("COUNT RATES: i2,:r2", i_2,r_2)
         
 # This uses region 2
         if i_2 != 0.0:
-            abs_final = int(abs_start + np.floor(np.log10(r_2/14/threshold)))
+            # calculating the attenuator diff
+            att_diff=np.floor(np.log10(r_2/threshold)/np.log10(14))
+            print("calculating attenuator difference",att_diff)
+            abs_final = int(abs_start + att_diff)
+            if abs_final < 0: abs_final = 0
         else:
             abs_final = abs_last1
-# this allows to remove at most 2 attenuators
-        if abs_final- abs_start <= -3:
-            abs_final=int(abs_start-3)
-        if r_2 < 2.0e3:
-            abs_final = abs_final -1
-        if r_2 > 5e5:
-            abs_final = abs_final +1
-        if r_2 > 2.0e6:
-            abs_final = abs_final +2
-        if abs_final <0:
-            abs_final =0
-        if abs_final >6:  abs_final =6
-        print(f"initial attenuator : final attenuator : last value {abs_start} : {abs_final}: {abs_last1}")
+# # this allows to remove/add at most 2 attenuators
+#         if abs_final- abs_start <= -3:
+#             abs_final=int(abs_start-3)
+#         # if the following is smaller the lowest allowed rate should increase
+#         # at a value of 12 it will switch when the rate is less than about 4k.  This will give 1.5% statistics
+#         if r_2 < 12:
+#             abs_final = abs_final -1
+#         if r_2 > 1e4:
+#             abs_final = abs_final +1
+#         if r_2 > 3e5:
+#             abs_final = abs_final +2
+#         if abs_final <0:
+#             abs_final =0
+#         if abs_final >6:  abs_final =6
+#         print(f"initial attenuator : final attenuator : last value {abs_start} : {abs_final}: {abs_last1}","\n")
         abs_last1=abs_final
         return abs_final, abs_last1
         
@@ -412,13 +420,12 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
         alpha_old =alpha
 
         #print("checking attenuator mode")
-
         #Attenuator MODE
         # Set the absorber time to the define exp_time for the measurement
         # AUTO MODE FIGURES OUT THE APPROPIRAE ATTENUATOR BY DOING TESTS WITH HIGH ATTENUATOR NUMBERS
         if atten_2 == "auto":
          # the following adjusts the attenuator (and maybe the counting at latter stage)
-            att,abs_last=yield from find_abs(alpha,precount_time, abs_last)
+            att,abs_last1=yield from find_abs(alpha,precount_time, abs_last)
          #   if alpha = alpha_start[i]= 0:
          #       print("its auto")
         # CALC MODE FIGURES OUT THE APPROPIRAE ATTENUATOR USING A FORMULA
@@ -667,7 +674,7 @@ def automate_attenuator_v1(precount_time=1,detector=lambda_det, upper_limit=2e5,
 
         if abs_target_position == abs2_current_position:
             print(f'Keep the current abs2 pos at {abs_target_position}')
-        else:
+        else: 
             yield from bps.mv(abs2, abs_target_position)
             print(f'change the abs2 to a new pos {abs_target_position}')
             yield from bps.sleep(2)

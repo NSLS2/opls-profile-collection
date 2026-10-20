@@ -182,6 +182,12 @@ def blocker_out(offset=30):
     print('sample blocker is out.')
 
 
+def blocker_in(block_pos=0):
+    yield from bps.mov(block.y, block_pos)
+    print('sample blocker is in.')
+
+
+
 def check_block_slit():
     '''Align the slit on the block (smaract)
     '''
@@ -192,7 +198,7 @@ def check_block_slit():
     yield from mabt(0,0,0) 
     yield from bps.mv(asth.rot,15.147)   #move the second absorber in 
     yield from bps.mv(sh, -1)
-    yield from dscanr(block.y, -1, 1, 41, 0.5)
+    yield from dscanr(block.y, -2.5, 2.5, 41, 0.5)
 
 def check_ih():
     '''Align the spectrometer ih stage

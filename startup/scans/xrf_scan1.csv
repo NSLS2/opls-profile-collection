@@ -1,0 +1,11 @@
+               s1    s2  
+alpha_start   0.04 0.085 
+alpha_stop    0.08 0.125 
+number_points    9    9 
+auto_atten       0    1
+wait_time        10   10
+exp_time         10   10
+precount_time   0.4  0.4
+x2_offset_start  0    0 
+x2_offset_stop   0    0 
+s2_vg          0.08  0.08

@@ -1,0 +1,13 @@
+               s1    s2    s3  s4     s5   s6   s7
+alpha_start   0.03 0.12 0.20 0.40  1.12    2   2.5
+alpha_stop    0.13 0.22 0.42 1.24  1.92  2.4   2.8
+number_points   11   11   12   15    11    6     4
+auto_atten       5    5    5    5    5     5   auto
+block_offset     0    0    0    0    0     0     0
+pre_time         5    5    5    4    10   30    45
+wait_time        5    5    5    4    10   30    45
+exp_time         5    5    5    4    10   30    45
+precount_time    5    5    5    5    5     5   auto
+x2_offset_start  0    0    0    0    3.4  text text
+x2_offset_stop   0    0    0    0    2     3   4.0
+s2_vg          0.2  0.2  0.2  0.2   0.2  0.2   0.2
