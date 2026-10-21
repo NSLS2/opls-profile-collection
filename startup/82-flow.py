@@ -31,6 +31,39 @@ def dry_he_off(value):
 
 
 
+flow_dry = flow2
+flow_wet = flow3
+
+
+def he_wet_on():
+    yield from bps.mv(flow_wet,3)
+
+def he_wet_off():
+    yield from bps.mv(flow_wet,0)
+
+def he_dry_on():
+    yield from bps.mv(flow_dry,3)
+
+def he_dry_off():
+    yield from bps.mv(flow_dry,0)
+
+def _he_on():
+    yield from he_dry_on()
+    yield from he_wet_on()
+
+def _he_off():
+    yield from he_dry_off()
+    yield from he_wet_off()
+
+def gas_valve_on(): 
+    yield from _he_on()
+
+def gas_valve_off():
+    yield from _he_off()
+
+
+
+
 
 
 
@@ -51,6 +84,66 @@ def record (time,number):
         record_file.close()
 
 
+### A1 for dry, A2 for wet
+### OP mode: 0: OPEN, 1: Close, 2: SetPoint
 
+# MFC.setDeviceRange(device='A1', val=200)
+# MFC.setScaleFactor(device='A1', val=1.45) # for Helium?
+# MFC.setFlow(device='A1', rate=100)
+# MFC.setMode(device='A1', mode=2) # setpoint mode
+# MFC.flow(device='A1')
+
+
+# MFC.setDeviceRange(device='A2', val=200)
+# MFC.setScaleFactor(device='A2', val=1.45) # for Helium?
+# MFC.setFlow(device='A2', rate=100)
+# MFC.setMode(device='A2', mode=2)
+# MFC.flow(device='A2')
+
+
+def MFC_set_dryflow(flow=0):
+    '''set MFC dry flow'''
+    MFC.setFlow(device='A1', rate=flow)
+
+
+def MFC_set_wetflow(flow=0):
+    '''set MFC dry flow'''
+    MFC.setFlow(device='A2', rate=flow)
+
+
+def MFC_dryflow_on():
+    '''turn on MFCs'''
+    MFC.setMode(device='A1', mode=2)
+
+def MFC_wetflow_on():
+    '''turn on MFCs'''
+    MFC.setMode(device='A2', mode=2)
+
+
+def MFC_dryflow_off():
+    '''turn off MFCs'''
+    MFC.setMode(device='A1', mode=1)
+
+def MFC_wetflow_off():
+    '''turn off MFCs'''
+    MFC.setMode(device='A2', mode=1)
+
+
+def MFC_flow_on():
+    '''turn on MFCs'''
+    MFC.setMode(device='A1', mode=2)
+    MFC.setMode(device='A2', mode=2)
+
+def MFC_flow_off():
+    '''turn off MFCs'''
+    MFC.setMode(device='A1', mode=1)
+    MFC.setMode(device='A5', mode=1)
+
+
+
+def dryflow_fullrate():
+    '''turn on MFCs'''
+    RE(he_dry_on())
+    MFC.setMode(device='A1', mode=0)
 
 

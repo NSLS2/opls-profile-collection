@@ -1,0 +1,28 @@
+Created a new directory
+/nsls2/data/smi/opls/shared/config/bluesky/profile_collection/startup/docs
+This is a temporary space
+
+Moved the MFC macros that were in the Tobias group scans to 82-flow.py
+
+Setting up a template_user.py file 
+Starting with singh_09
+Not sure where we should put
+
+def changeSample():
+    print('move the soller mode to change the sample')
+    yield from set_mode('Soller')
+    yield from mabt(0,0,0)
+
+
+def slitX2_cleanup():
+
+    '''to move the motor to initial positoins after control C
+    '''
+    yield from beam_off()
+    yield from bps.mov(abs2,5)
+    yield from slitX2_out()
+
+
+Also created scan_1.py  This has all the scans.  This will no longer be in the users python files.  Specific scans will be in the scan directory.
+
+

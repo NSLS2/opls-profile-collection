@@ -137,9 +137,6 @@ def check_tth_pseudo(detector=lambda_det):
     
 
 
-
-
-
 def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, atten_2=5, finescan=False):
    
     yield from bps.mv(abs2,atten_2)
@@ -163,7 +160,6 @@ def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, atten_
     # For the fine elevator you need to change geo.sh to geo.sh2
         yield from dscanr(geo.sh, -0.5*range,0.5*range, npts, time)
 
-
 def sample_height_set_fine_o(atten_2=5, finescan=True):
     yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 2, atten_2=atten_2, finescan=finescan)
 
@@ -176,6 +172,8 @@ def sample_height_set_coarse1(value=0):
 def sample_height_set_coarse2(value=0):
     yield from sample_height(alpha=0.06, range=1.5,npts=31,time=0.5,settle_time = 0.5, finescan=False)
 
+def sample_height_set_fine(atten=5, finescan=False):
+    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 2, atten_2=atten_2, finescan=finescan)
 
 def blocker_out(offset=30):
     yield from bps.mov(block.y, offset)
