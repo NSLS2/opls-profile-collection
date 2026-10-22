@@ -1,21 +1,18 @@
 [workspace]
 channels = ["conda-forge"]
 name = "opls-profile-collection"
-platforms = ["linux-64"]
+platforms = [{ platform = "linux-64", glibc = "2.17" }]
 version = "2026.2.0"
 requires-pixi = ">=0.82.1"
 
 
 [activation.env]
-REDIS_HOST="xf12id1-opls-redis1.nsls2.bnl.gov"
-
-[system-requirements]
-libc = "2.17"
+REDIS_HOST = "xf12id1-opls-redis1.nsls2.bnl.gov"
 
 [feature.profile.dependencies]
 bluesky-base = "==1.15.0"
 bluesky-queueserver = "*"
-matplotlib-base= ">=3.10"
+matplotlib-base = ">=3.10"
 networkx = ">=3.4.2,<4"
 nslsii = ">=0.11.9"
 numpy = "*"
@@ -39,6 +36,9 @@ databroker = "==2.0.0"
 epicscorelibs = ">=7.0.7.99.1.1,<8"
 bluesky-tiled-plugins = ">=2.0.2"
 ophyd-async = ">=0.13.7,<0.14"
+ca-certificates = ">=2026.10.19"
+certifi = ">=2026.10.19"
+pip = ">=26.2.2"
 
 
 [feature.profile.pypi-dependencies]
@@ -74,16 +74,6 @@ pymca = "pymca"
 features = ["profile", "terminal"]
 solve-group = "profile"
 
-[environments.terminal.dependencies]
-ca-certificates = ">=2026.10.19"
-certifi = ">=2026.10.19"
-pip = ">=26.2.2"
-
 [environments.qs]
 features = ["profile", "qs"]
 solve-group = "profile"
-
-[environments.qs.dependencies]
-ca-certificates = ">=2026.10.19"
-certifi = ">=2026.10.19"
-pip = ">=26.2.2"
