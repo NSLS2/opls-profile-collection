@@ -61,7 +61,7 @@ def slitX2_cleanup():
     yield from bps.mov(abs2,5)
     yield from slitX2_out()
 
-def setup():
+def sample_setup():
     x2_direction = -1 # 1
     num_repeat = 10 
     gid_repeat = False
@@ -69,14 +69,15 @@ def setup():
     skip_gid = False
 
     samp_name_dict = {
-        1: 'C263_A5_NH42SO4_10mM_Run2', # front, 32mL, loaded at 11am; run at 11:20am (XRF)
-        2: 'C263_A4_PFOS_DoTAB_6uM_ea_Run2', # front, 32mL, loaded at 6:47pm; run at xxpm (PXR/GID/XRF/XRR)
+        1: 'CSample_1', # front, 32mL, loaded at 11am; run at 11:20am (XRF)
+        2: 'CSample_2, # front, 32mL, loaded at 6:47pm; run at xxpm (PXR/GID/XRF/XRR)
     }
 
     samp_x2_pos ={
         1: [-93.4+76.2/2 ],    # front,  -55.3
         2: [-93.4+76.2/2+76.2+5],  # back # remove -5 if not doing time dependence
     }   
+    pprint.pprint(samp_name_dict)
     return(samp_name_dict,samp_x2_pos)
 
 
@@ -128,52 +129,58 @@ def xdict():
 # Below is the case where all of the scans are the same and from a scan file
 # This could be generalized so that they are different by using if statements
 # Could also include calling old fashion scans that were hard wired
-def xr(number):
+def xr(number,file_name):
     print("Running XR scan for sample",str(number)[0], "for ", samp_name_dict[number])
-#    yield from xr_scan_file(samp_name_dict[number],"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
+    name=get_name(file_name,'xr')
+#    yield from xr_scan_file(name,"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
 
 # This is where the type of XRF scans are defined. The same as xr() except the name
 # Below is the case where all of the scans are the same and from a scan file
 # This could be generalized so that they are different by using if statements
 # Could also include calling old fashion scans that were hard wired
-def xrf(number):
+def xrf(number,file_name):
     print("Starting XRF scan for sample",str(number)[0], "for ", samp_name_dict[number])
+    name=get_name(file_name,'xrf')
     if xrf_short:
         print("we would need to fill in")
     else:
-  #      yield from xrf_scan_file(samp_name_dict[number],"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
+  #      yield from xrf_scan_file(name,"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
         print("scan commented out")
 
 # This is where the type of Soller scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
 # Currently this is define in q space but the intent is to write this in anngle space
-def soller(number,start=1.3,q_end=1.8,npts=21,exp_time=20):
+def soller(number,file_name):
     print("Soller scan for sample",str(number)[0], "for ", samp_name_dict[number])
     print("From q=",q_start, "to", q_end, "with", npts, "points for",exp_time, "sec")
-#   yield from soller_scanq(samp_name_dict[number], block_pos = 0,q_start,q_end,npts,exp_time, x2_direction=1,alpha_i=0.0728, wait_time=5, atten=-1.775): # block edge at -31.5
+    name=get_name(file_name,'soller')
+#   yield from soller_scanq(name, block_pos = 0,q_start=1.3,q_end=1.8,npts=21,exp_time=20, x2_direction=1,alpha_i=0.0728, wait_time=5, atten=-1.775): # block edge at -31.5
     print('Starting Soller measurement')
 
 # This is where the type of GISAXS scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
-def gisaxs(number):
+def gisaxs(number,file_name):
     print("Starting GISAXS scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    #yield from gisaxs_scan(samp_name_dict[number], x2_direction = x2_direction, atten=atten_slit)
+    name=get_name(file_name,'gisaxs')
+    #yield from gisaxs_scan(name, x2_direction = x2_direction, atten=atten_slit)
 
 
 # This is where the type of GIWAXS scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
-def giwaxs(number):
+def giwaxs(number,file_name):
     print("Starting GIWAXS scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    name=samp_name_dict[number]
-    #yield from giwaxs_scan(name+'_giwaxs', incident_angle=0.0728, atten=atten_slit, block_pos=60, exposure_time=30, use_slitx2=True, slit_x2_offset_block=slit_x2_offset_block_new)
-    #yield from giwaxs_scan_bkg(name+'_giwaxs_bkg', incident_angle=0.0728, atten=atten_slit, block_pos=60, exposure_time=30, use_slitx2=True, sh_offset=-1, slit_x2_offset_block=slit_x2_offset_block_new)
+    name=get_name(file_name,'giwaxs')
+    #yield from giwaxs_scan(name, incident_angle=0.0728, atten=atten_slit, block_pos=60, exposure_time=30, use_slitx2=True, slit_x2_offset_block=slit_x2_offset_block_new)   
+    name=get_name(file_name,'giwaxs_bkg')
+    #yield from giwaxs_scan_bkg(name, incident_angle=0.0728, atten=atten_slit, block_pos=60, exposure_time=30, use_slitx2=True, sh_offset=-1, slit_x2_offset_block=slit_x2_offset_block_new)
 
 # This is where the type of PSEUDO scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
 # Here we would probably want to inlude other descriptors such as a list of stth values
 
-def pxr(number):
+def pxr(number,file_name):
     print("Starting Pseudo XR scan for sample",str(number)[0], "for ", samp_name_dict[number])
+    name=get_name(file_name,'XR')
     #yield from gixos_multiqxy(samp_name_dict[number]+'_pxr', alpha = 0.0728, 
     #    num_point = 1, exp_time = 30, 
     #    x2_per_step = 0, atten=-1.5,
@@ -278,6 +285,11 @@ def pxr_post():
     yield from slitX2_out()
     print('Pseudo/GIOXS is done')
 
+#file naming, could be extended to add pressure or run number
+
+def get_name(name,type):
+    return(name+'_'+type)
+
 
 # we probably need a kibron mode where we add the pressure to the name This was sometimes used in the old code
 #samp_name_new = samp_name+f'_P{one_pressure}'
@@ -287,7 +299,9 @@ def run_threetroughs():
     run three Teflon troughs
     '''
     detector=lambda_det
-    samp_name_dict,sam_x2_pos=setup()
+    samp_name_dict,sam_x2_pos=sample_setup()
+    print("printing dictionary")
+    pprint.pprint(samp_name_dict)
     pxr_run_dict, soller_run_dict, xr_run_dict, xrf_run_dict, gisaxs_run_dict, giwaxs_run_dict = xdict()
   #  printSampleInfo(samp_name_dict,sam_x2_pos,xr_run_dict,xrf_run_dict,soller_run_dict,gisaxs_run_dict,pxr_run_dict)
 
@@ -310,6 +324,7 @@ def run_threetroughs():
         for ii,samp_x2 in enumerate(samp_x2_list):
             samp_name_new = samp_name
             print(f'Currrently measuring {samp_name_new}')
+            #Ben doesnt understand why runNum is coupled to ii
             runNum = ii+1
             samp_x2_start = samp_x2+x2_offset*x2_direction
 
@@ -325,27 +340,27 @@ def run_threetroughs():
 
             if pxr_run:
                 pxr_pre()
-                pxr(ii)
+                pxr(ii,samp_name_dict[ii])
                 pxr_post()
 
             if soller_run:
                 soller_pre()
-                soller(ii)
+                soller(ii,samp_name_dict[ii])
                 soller_post()
 
             if xrf_run:
                 xrf_pre()
-                xrf(ii)
+                xrf(ii,samp_name_dict[number])
                 xrf_post()
 
             if xr_run:
                 xr_pre()
-                xr(ii)
+                xr(ii,samp_name_dict[number])
                 xr_post()
 
             if gisaxs_run:
                 gisaxs_pre()
-                gisaxs(ii)
+                gisaxs(ii,samp_name_dict[number])
                 gisaxs_post()
 
             if giwaxs_run:

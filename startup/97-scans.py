@@ -7,19 +7,6 @@ import pandas as pd
 import pprint
 
 
-# #  These would eventually be dfine to control the type of scan, like  RE(soller_scan_new("ben_test",q_start=1.25,q_end=1.75,npts=17))
-#  #xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=False): 
-#     def xr0(): print("running xr1 with file ",sample_name_dict[0])
-#     def xr1(): print("running xr1 with file ",sample_name_dict[1])
-#     def xr2(): print("running xr1 with file ",sample_name_dict[2])
-
-
-# If TRUE than we can pick the scan detail 
-#     if ii == 0: yield from xr0()
-#     if ii == 1: yield from xr1()
-#     if ii == 1: yield from xr2()
-
-
 # Safely converts a value into a floating-point number (float) without crashing the program if the conversion fails
 def to_float_safe(val):
     try:
