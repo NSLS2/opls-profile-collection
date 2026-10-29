@@ -71,20 +71,45 @@ class Sample():
     
 
 samples = []
-samples.append(Sample("name1", 17, [["XR",1],["soller",2],["wait",20],["xrf",3],['pressure',20],["XR",2]]))
-samples.append(Sample("name2", 17, [["XR",1],["soller",2],["wait",20],["xrf",3],['pressure',20],["XR",2]]))
+samples.append(Sample("name1", 17, [["xr1",1,"start=1","end=2"],["soller",2],["wait",20],["xrf",3],['pressure',20],["XR",2]]))
+samples.append(Sample("name2", 17, [["xr",1],["soller",2],["wait",20],["xrf",3],['pressure',20],["BAD",2]]))
+allowed_list=['xr','xrf']
 
+
+
+# discreptors=len(samples[0].measure[scan][2:])
+#      #   print(samples[0].measure[scan][0],discreptors)
+#         if discreptors == 0:
+#             print("nothing else to do")
+#         else:
+#             print("discreptors=",discreptors)
+#             add_ons=list(range(2,discreptors+2))
+#             for extra in add_ons:
+#                 test2(samples[0].measure[scan][extra])
 
 def check_samples():
     allowed_list =["xr","soller","xrf"]
     all_list = list(range(len(samples)))
-    print(all_list)
+    set_allowed=0
     for ii in all_list:
-        print(ii)
+#        print(ii,samples[ii].name)
         sample=samples[ii]
-        for item in sample.name:
-            method=samples[ii].measure[item][0]
-            if allowed_list.count(method.lower()) == 0 : print("error")
+
+        for scan in all_list:
+            items=list(range(len(samples[ii].measure)))
+            method=samples[ii].measure[scan][0]
+            # this is to make it case insensitive, not working
+               # if allowed_list.count(method.lower()) == 0 : print(method,"this is not allowed")
+            if allowed_list.count(method) == 0 : 
+                print("Method", method,"is not an allowed method")
+                set_allowed=1
+    return(set_allowed)
+
+def get_descriptors(sample,scan):
+    print("getting descriptor")
+    discreptors=len(samples[sample].measure[scan][2:])
+    return(samples[sample].measure[scan][2:])
+
 
 
 # slit_x2 to sample distance: ~87mm, HZ, 2025/06/20
@@ -96,6 +121,7 @@ def check_samples():
 def xr(number,file_name,index):
     print("Running XR scan for sample",str(number)[0], "for ", samp_name_dict[number])
     name=get_name(file_name,'xr',index)
+    add_info=get_descriptors(sample,scan)
 #    yield from xr_scan_file(name,"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
 
 # This is where the type of XRF scans are defined. The same as xr() except the name
@@ -217,6 +243,7 @@ def pxr_pre(samp_x2_start):
 
 
 # Post scansure_time=1, exposure_number = 1)
+def xr_post():
     print('XR Soller is done')
 
 def xrf_post():
@@ -238,8 +265,7 @@ def xrf_post():
     yield from bps.mv(flow2,2.1)
     yield from bps.mv(flow1,0)
     yield from set_mode('XR')
-    print('XRF Soller is done')def xr_post():
-
+    print('XRF Soller is done')
 
 def soller_post():
     yield from bps.mv(flow2,2.1) ## change He rate back
@@ -250,8 +276,7 @@ def gisaxs_post():
     yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
     print('GISAXS is done')
 
-def giwaxs_post():def xr_post():
-
+def giwaxs_post():
     yield from giwaxs_scan1_bkg(ii)
     yield from det_set_exposure([pilatus300k,quadem], exposure_time=1, exposure_number = 1)
     yield from bps.mv(flow2,2.1)
@@ -276,6 +301,9 @@ def get_name(name,index,type):
 n_pseudo=n_xr=n_xrf=n_soller=n_gisaxs=n_giwaxs=0
 
 def run():
+    if check_samples() ==1:
+        print("ERROR: WILL NOT TAKE DATA")
+        return
     all_list = list(range(len(samples)))
     for i in all_list:
         samp_name=samples[i].name

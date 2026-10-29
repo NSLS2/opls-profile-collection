@@ -79,7 +79,7 @@ def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=F
     #     tilt_stage=False)
     return
 
-# scan_p=xr_scan_file("test","foo4a.csv","all",3,"global")
+# scan_p=xr_scan_file("test","xr_scans1.csv","all",3,"global")
 # pprint.pprint(scan_p)
 
 #
