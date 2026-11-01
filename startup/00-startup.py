@@ -39,7 +39,7 @@ tiled_inserter = BufferingWrapper(tiled_inserter)  # in-process queue
 configure_base(
     get_ipython().user_ns,
     broker_name=tiled_inserter,
-    publish_documents_with_kafka=True,
+    publish_documents_with_kafka="opls",
     redis_url="xf12id1-opls-redis1.nsls2.bnl.gov",
     redis_port=6380,
     redis_ssl=True,
