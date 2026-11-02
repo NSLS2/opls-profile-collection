@@ -3,8 +3,7 @@ import logging
 from nslsii import configure_base
 from IPython import get_ipython
 from bluesky.callbacks.zmq import Publisher
-from bluesky.callbacks.buffer import BufferingWrapper
-from bluesky_tiled_plugins import TiledInserter
+from bluesky_tiled_plugins import BufferingWrapper, TiledInserter
 import functools
 from ophyd.signal import EpicsSignal, EpicsSignalRO
 # Ben added so that Pymca would work
