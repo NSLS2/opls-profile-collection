@@ -3,6 +3,7 @@ import logging
 from nslsii import configure_base
 from IPython import get_ipython
 from bluesky.callbacks.zmq import Publisher
+from bluesky_tiled_plugins import BufferingWrapper, TiledInserter
 import functools
 from ophyd.signal import EpicsSignal, EpicsSignalRO
 # Ben added so that Pymca would work
@@ -22,34 +23,22 @@ EpicsSignalRO.set_defaults(connection_timeout=10, timeout=60)
 
 
 # Configure a Tiled writing client
-tiled_writing_client = from_profile("nsls2", api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_OPLS"])["opls"]["raw"]
-tiled_writing_client.context.http_client.headers['tiled-qos'] = 'acquisition'
+tiled_writing_client_raw = from_profile("nsls2", api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_OPLS"])["opls"]["raw"]
+tiled_writing_client_raw.context.http_client.headers['tiled-qos'] = 'acquisition'
+TILED_BACKUP_ROOT = "/nsls2/data/smi/opls/shared/config/bluesky/tiled_backup"
 
-class TiledInserter:
-    name = "opls"
-    def insert(self, name, doc):
-        ATTEMPTS = 20
-        error = None
-        for _ in range(ATTEMPTS):
-            try:
-                tiled_writing_client.post_document(name, doc)
-            except Exception as exc:
-                print("Document saving failure:", repr(exc))
-                error = exc
-            else:
-                break
-            time.sleep(2)
-        else:
-            # Out of attempts
-            raise error
+tiled_inserter = TiledInserter(
+    tiled_writing_client_raw,
+    "opls",
+    backup_directory=f"{TILED_BACKUP_ROOT}/raw",
+)
+tiled_inserter = BufferingWrapper(tiled_inserter)  # in-process queue
 
-tiled_inserter = TiledInserter()
-# tiled_inserter = BufferingWrapper(tiled_inserter)
 
 configure_base(
     get_ipython().user_ns,
     broker_name=tiled_inserter,
-    publish_documents_with_kafka=True,
+    publish_documents_with_kafka="opls",
     redis_url="xf12id1-opls-redis1.nsls2.bnl.gov",
     redis_port=6380,
     redis_ssl=True,
@@ -60,6 +49,25 @@ tiled_reading_client = from_profile("nsls2", username=None)["opls"]["raw"]
 tiled_reading_client.context.http_client.headers['tiled-qos'] = 'acquisition'
 
 db = Broker(tiled_reading_client)
+
+
+def flush_tiled(timeout=30):
+    """Block until all buffered documents have been written to Tiled.
+
+    Call this before reading a just-acquired run back from Tiled: documents
+    are buffered, so Tiled's view may lag behind Bluesky. Flushes every
+    writer buffer, so it stays correct regardless of which writers are
+    subscribed to RE.
+
+    Raises RuntimeError if a buffer does not drain within ``timeout``
+    seconds or its worker thread has died.
+    """
+    for label, buffer in (("raw", tiled_inserter),):
+        if not buffer.flush(timeout):
+            raise RuntimeError(
+                f"Tiled {label} buffer was not flushed within {timeout} s "
+                "(timed out or its worker thread died)."
+            )
 
 publisher = Publisher("xf12id1-ws2:5577")
 RE.subscribe(publisher)
