@@ -51,15 +51,23 @@ tiled_reading_client.context.http_client.headers['tiled-qos'] = 'acquisition'
 db = Broker(tiled_reading_client)
 
 
-def flush_tiled():
+def flush_tiled(timeout=30):
     """Block until all buffered documents have been written to Tiled.
 
     Call this before reading a just-acquired run back from Tiled: documents
     are buffered, so Tiled's view may lag behind Bluesky. Flushes every
     writer buffer, so it stays correct regardless of which writers are
     subscribed to RE.
+
+    Raises RuntimeError if a buffer does not drain within ``timeout``
+    seconds or its worker thread has died.
     """
-    tiled_inserter.flush()
+    for label, buffer in (("raw", tiled_inserter),):
+        if not buffer.flush(timeout):
+            raise RuntimeError(
+                f"Tiled {label} buffer was not flushed within {timeout} s "
+                "(timed out or its worker thread died)."
+            )
 
 publisher = Publisher("xf12id1-ws2:5577")
 RE.subscribe(publisher)
