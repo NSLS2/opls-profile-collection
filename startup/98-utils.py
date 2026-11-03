@@ -107,9 +107,7 @@ def ps(uid='-1',det='default',suffix='default',shift=.5,logplot='off', der  = Fa
     #from lmfit import minimize, Parameters, Parameter, report_fit
     #from scipy.special import erf
 
-    # Tiled's view may lag behind Bluesky because the documents are buffered;
-    # flush the buffer so the requested run is fully visible before reading.
-    flush_tiled_buffers()
+    flush_tiled()  # wait for buffered documents to reach Tiled
 
     # get the scan information:
     if uid == '-1':
@@ -293,9 +291,7 @@ def ps_new(uid='-1',det='default',suffix='default',shift=.5,logplot='off', der =
     #from lmfit import minimize, Parameters, Parameter, report_fit
     #from scipy.special import erf
 
-    # Tiled's view may lag behind Bluesky because the documents are buffered;
-    # flush the buffer so the requested run is fully visible before reading.
-    flush_tiled_buffers()
+    flush_tiled()  # wait for buffered documents to reach Tiled
 
     # get the scan information:
     if uid == '-1':

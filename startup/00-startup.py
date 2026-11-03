@@ -51,7 +51,7 @@ tiled_reading_client.context.http_client.headers['tiled-qos'] = 'acquisition'
 db = Broker(tiled_reading_client)
 
 
-def flush_tiled_buffers():
+def flush_tiled():
     """Block until all buffered documents have been written to Tiled.
 
     Call this before reading a just-acquired run back from Tiled: documents

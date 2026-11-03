@@ -1,16 +1,19 @@
 def test_quadem():
     print("counting quadem")
     uid,  = RE(bp.count([quadem]))
+    flush_tiled()  # wait for buffered documents to reach Tiled
     _ = db[uid].table(fill=True)
 
 def test_lambda():
     print("counting lambda")
     uid, = RE(bp.count([lambda_det]))
+    flush_tiled()  # wait for buffered documents to reach Tiled
     _ = db[uid].table(fill=True)
 
 def test_pilatus300k():
     print("counting pilatus300k")
     uid, = RE(bp.count([pilatus300k]))
+    flush_tiled()  # wait for buffered documents to reach Tiled
     _ = db[uid].table(fill=True)
 
 def det_test(detectors=None):
