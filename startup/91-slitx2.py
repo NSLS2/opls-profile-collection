@@ -60,8 +60,8 @@ def check_slitX2_block(block_offset=1):
     yield from mabt(0,0,0)
     yield from bps.mov(sh, -1)
     yield from bps.mv(abs2,5) 
-    yield from bp.rel_scan([det],slit_x2,-1,1,21,per_step=shutter_flash_scan)
-    peak_cen = ps_new(det='p100kA', suffix='_2', der=True, plot=False)
+    uid = yield from bp.rel_scan([det],slit_x2,-1,1,21,per_step=shutter_flash_scan)
+    peak_cen = ps_new(uid=uid, det='p100kA', suffix='_2', der=True, plot=False)
     yield from bps.mov(slit_x2, peak_cen+slit_offset)
 
     slit_x2_offset_block_new = x2.position + slit_x2.position

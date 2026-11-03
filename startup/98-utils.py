@@ -107,6 +107,10 @@ def ps(uid='-1',det='default',suffix='default',shift=.5,logplot='off', der  = Fa
     #from lmfit import minimize, Parameters, Parameter, report_fit
     #from scipy.special import erf
 
+    # Tiled's view may lag behind Bluesky because the documents are buffered;
+    # flush the buffer so the requested run is fully visible before reading.
+    tiled_inserter.flush()
+
     # get the scan information:
     if uid == '-1':
         uid=-1
@@ -264,8 +268,8 @@ class show_ps(QtAwareCallback):
 def check_plotting(det=quadem):
     
     cb=show_ps(det='monitor', suffix='_3', der=True)
-    yield from bpp.subs_wrapper(bp.rel_scan([det],sh,-1,1,5,per_step=shutter_flash_scan),cb)
-    peak_cen = ps_new(det='monitor', suffix='_3', der=True, plot=False)
+    uid = yield from bpp.subs_wrapper(bp.rel_scan([det],sh,-1,1,5,per_step=shutter_flash_scan),cb)
+    peak_cen = ps_new(uid=uid, det='monitor', suffix='_3', der=True, plot=False)
     print(peak_cen)
     return peak_cen
 
@@ -288,6 +292,10 @@ def ps_new(uid='-1',det='default',suffix='default',shift=.5,logplot='off', der =
     #from lmfit import  Model
     #from lmfit import minimize, Parameters, Parameter, report_fit
     #from scipy.special import erf
+
+    # Tiled's view may lag behind Bluesky because the documents are buffered;
+    # flush the buffer so the requested run is fully visible before reading.
+    tiled_inserter.flush()
 
     # get the scan information:
     if uid == '-1':
