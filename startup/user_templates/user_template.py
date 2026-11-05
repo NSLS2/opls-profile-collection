@@ -62,48 +62,44 @@ def slitX2_cleanup():
     yield from slitX2_out()
 
 
+
 class Sample():
-    def __init__(self, name, x2, measure):
+    def __init__(self, name, other, measure):
         self.name = name
-        self.x2 = x2
+        self.other = other
         self.measure = measure
 
     
-
 samples = []
-samples.append(Sample("name1", 17, [["xr1",1,"start=1","end=2"],["soller",2],["wait",20],["xrf",3],['pressure',20],["XR",2]]))
-samples.append(Sample("name2", 17, [["xr",1],["soller",2],["wait",20],["xrf",3],['pressure',20],["BAD",2]]))
+samples.append(Sample("sample_1", 17,[ "xr",1,{"start":1,"end":2}]))
+samples.append(Sample("sample_2", 17,[ "xr",1,{"start":1,"end":2}]))
+
+my_args=samples[0].measure[2]
+
+def func(arg1, **kwargs):
+    print(f"func({arg1}, {', '.join(f'{k}={v}' for k, v in kwargs.items())})")
+    start = 17 * kwargs["start"]
+    print(start)
+func("test", **my_args)
+
+
 allowed_list=['xr','xrf']
 
-
-
-# discreptors=len(samples[0].measure[scan][2:])
-#      #   print(samples[0].measure[scan][0],discreptors)
-#         if discreptors == 0:
-#             print("nothing else to do")
-#         else:
-#             print("discreptors=",discreptors)
-#             add_ons=list(range(2,discreptors+2))
-#             for extra in add_ons:
-#                 test2(samples[0].measure[scan][extra])
-
 def check_samples():
+    set_allowed=1
     allowed_list =["xr","soller","xrf"]
     all_list = list(range(len(samples)))
-    set_allowed=0
     for ii in all_list:
-#        print(ii,samples[ii].name)
-        sample=samples[ii]
-
-        for scan in all_list:
-            items=list(range(len(samples[ii].measure)))
-            method=samples[ii].measure[scan][0]
-            # this is to make it case insensitive, not working
-               # if allowed_list.count(method.lower()) == 0 : print(method,"this is not allowed")
-            if allowed_list.count(method) == 0 : 
-                print("Method", method,"is not an allowed method")
-                set_allowed=1
+        method=samples[ii].measure[0]
+        # this is to make it case insensitive, not working
+        if allowed_list.count(method.lower()) == 1:
+            print(method,"is an allowed method:", samples[ii].name,samples[ii].measure)
+        if allowed_list.count(method) == 0 : 
+            print(method,"\033[91mis not an allowed metho:\033[0m",sasamples[item].namemples[ii].name,samples[ii].measure)
+            set_allowed=0
     return(set_allowed)
+
+
 
 def get_descriptors(sample,scan):
     print("getting descriptor")
@@ -111,74 +107,90 @@ def get_descriptors(sample,scan):
     return(samples[sample].measure[scan][2:])
 
 
-
+                       
+                  
 # slit_x2 to sample distance: ~87mm, HZ, 2025/06/20
 
 # This is where the type of XR scans are defined.
 # Below is the case where all of the scans are the same and from a scan file
 # This could be generalized so that they are different by using if statements
 # Could also include calling old fashion scans that were hard wired
-def xr(number,file_name,index):
-    print("Running XR scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    name=get_name(file_name,'xr',index)
-    add_info=get_descriptors(sample,scan)
-#    yield from xr_scan_file(name,"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
 
-# This is where the type of XRF scans are defined. The same as xr() except the name
+def xr(item,method,index,x2_pos):
+    sample=samples[item].name
+    name=get_name(name,'xr',index)
+    print(name)
+  # extras=samples[n].measure
+    extras="test"
+    print("Starting XR scan with file- ",name, "  at x2=",x2_pos,"extras:",extras)
+    pos=x2_pos
+   #xr_scan_file_test(extras)
+ #   print("Running XR scan for sample",sample_n, "with ", samples[sample_n].name, "and index =",index, "named=",name)
+  #  yield from xr_scan_file(name,"xr_scan1.csv",scan_dir="global", auto_atten=False)
+
+
+# This is where the type of XRF scans are defined. The same as xr() except the name        
+
 # Below is the case where all of the scans are the same and from a scan file
 # This could be generalized so that they are different by using if statements
 # Could also include calling old fashion scans that were hard wired
-def xrf(number,file_name,index):
-    print("Starting XRF scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    name=get_name(file_name,'xrf',index)
+def xrf(item,method,index,x2_pos):
+    sample=samples[item].name
+    name=get_name(name,'xrf',index)
+    print("Starting XRF scan with file- ",name, "at x2=",x2_pos)
   # yield from xrf_scan_file(name,"xr_scan1.csv","all",99,scan_dir="global", auto_atten=False)
     print("scan commented out")
 
 # This is where the type of Soller scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
 # Currently this is define in q space but the intent is to write this in anngle space
-def soller(number,file_name,index):
-    print("Soller scan for sample",str(number)[0], "for ", samp_name_dict[number])
+def soller(item,index,x2_pos):
+    sample=samples[item].name
+    name=get_name(name,'soller',index)
     print("From q=",q_start, "to", q_end, "with", npts, "points for",exp_time, "sec")
-    name=get_name(file_name,'soller',index)
 #   yield from soller_scanq(name, block_pos = 0,q_start=1.3,q_end=1.8,npts=21,exp_time=20, x2_direction=1,alpha_i=0.0728, wait_time=5, atten=-1.775): # block edge at -31.5
     print('Starting Soller measurement')
 
 # This is where the type of GISAXS scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
-def gisaxs(number,file_name,index):
-    print("Starting GISAXS scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    name=get_name(file_name,'gisaxs',index)
+def gisaxs(item,index,x2_pos):
+    sample=samples[item].name
+    name=get_name(name,'gisaxs',index)
+    print("Starting GISAXS scan with file- ",name, "  at x2=",x2_pos)
     #yield from gisaxs_scan(name, x2_direction = x2_direction, atten=atten_slit)
 
 
 # This is where the type of GIWAXS scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
-def giwaxs(number,file_name,index):
-    print("Starting GIWAXS scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    name=get_name(file_name,'giwaxs',index)
+def giwaxs(item,index,x2_pos):
+    sample=samples[item].name
+    name=get_name(name,'giwaxs',index)
+    print("Starting GIWAXS scan with file- ",name, "  at x2=",x2_pos)
     #yield from giwaxs_scan(name, incident_angle=0.0728, atten=atten_slit, block_pos=60, exposure_time=30, use_slitx2=True, slit_x2_offset_block=slit_x2_offset_block_new)   
-    name=get_name(file_name,'giwaxs_bkg',index)
+    name=get_name(name,'giwaxs_bkg',index)
+    print("Starting GIWAXS scan with file- ",name, "  at x2=",x2_pos)
     #yield from giwaxs_scan_bkg(name, incident_angle=0.0728, atten=atten_slit, block_pos=60, exposure_time=30, use_slitx2=True, sh_offset=-1, slit_x2_offset_block=slit_x2_offset_block_new)
 
 # This is where the type of PSEUDO scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
 # Here we would probably want to inlude other descriptors such as a list of stth values
 
-def pxr(number,file_name,index):
-    print("Starting Pseudo XR scan for sample",str(number)[0], "for ", samp_name_dict[number])
-    name=get_name(file_name,'XR',index)
+def pxr(item,index,x2_pos):
+    sample=samples[item].name
+    name=get_name(name,'giwaxs',index)
+    print("Starting PSEUDO scan with file- ",name, "  at x2=",x2_pos)
     #yield from gixos_multiqxy(samp_name_dict[number]+'_pxr', alpha = 0.0728, 
     #    num_point = 1, exp_time = 30, 
     #    x2_per_step = 0, atten=-1.5,
-    #    slit='slit_x2')
+    #    slit='slit_x2')method
 
 
 # Pre scans
 def xr_pre(samp_x2_start):
     print('XRR prescans')
     yield from slitX2_out()
-    yield from set_mode('XR')
+    yield from set_mode('XR')   
+
     yield from bps.mv(flow2,2.4)
     yield from bps.mv(geo.stblx2,samp_x2_start)
     yield from bps.sleep(15)
@@ -194,6 +206,7 @@ def xrf_pre(samp_x2_start):
     yield from det_set_exposure([detector], exposure_time=1, exposure_number = 1)
     yield from bps.mv(geo.stblx2,samp_x2_start) # Normal run
     yield from bps.sleep(15)
+
     yield from sample_height_set_fine()   #scan the detector arm height from -0.2 to 0.2 with 21 points
 
 def soller_pre(samp_x2_start):
@@ -234,6 +247,11 @@ def giwaxs_pre(samp_x2_start):
 def pxr_pre(samp_x2_start):
     print('PSEUDO/GIXOS prescans')
     yield from set_mode('Soller')
+def gisaxs_post():
+    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
+    print('GISAXS is done')
+
+
     yield from slitX2_out()
     yield from bps.mv(flow2,constant_he_gid)
     yield from set_mode('Soller')
@@ -243,14 +261,13 @@ def pxr_pre(samp_x2_start):
 
 
 # Post scansure_time=1, exposure_number = 1)
-def xr_post():
-    print('XR Soller is done')
+    n_pseudo = n_xr =n_xrf = n_soller = n_gisaxs = n_giwaxs=0
 
 def xrf_post():
     yield from bps.mv(flow2,2.1)
     yield from bps.mv(flow1,0)
     yield from set_mode('XR')
-    print('XRF Soller is done')
+    print('XRF  is done')
 
 def soller_post():
     yield from bps.mv(flow2,2.1) ## change He rate back
@@ -259,18 +276,13 @@ def soller_post():
 
 def xr_post():
     yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-    print('XR Soller is done')
+    print('XR  is done')
 
 def xrf_post():
     yield from bps.mv(flow2,2.1)
     yield from bps.mv(flow1,0)
     yield from set_mode('XR')
     print('XRF Soller is done')
-
-def soller_post():
-    yield from bps.mv(flow2,2.1) ## change He rate back
-    yield from det_set_exposure([pilatus100kA,quadem], exposure_time=1, exposure_number = 1)
-    print('Soller is done')
 
 def gisaxs_post():
     yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
@@ -292,71 +304,69 @@ def pxr_post():
 #file naming, could be extended to add pressure or run number
 
 def get_name(name,index,type):
-    return(name+'_'+str(index)+'_'+type)
-
+    return(name+'_'+index+'_'+str(type))
 
 # we probably need a kibron mode where we add the pressure to the name This was sometimes used in the old code
-#samp_name_new = samp_name+f'_P{one_pressure}'
+#samp_name_new = samp_name+f'_P{one_pressure}'samples[item].name
 
-n_pseudo=n_xr=n_xrf=n_soller=n_gisaxs=n_giwaxs=0
+
 
 def run():
-    if check_samples() ==1:
-        print("ERROR: WILL NOT TAKE DATA")
+    if check_samples() ==0:
+        print("\033[91mERROR: WILL NOT TAKE DATA\033[0m")
         return
     all_list = list(range(len(samples)))
-    for i in all_list:
-        samp_name=samples[i].name
-        x2_start=samples[i].x2
-        methods=samples[i].measure
-        print(f'Currrently measuring {samp_name}')
+    # sample_n is the sample number
+    for item in all_list:
+        sample_name=samples[item].name
+        other=samples[item].other
+        measure=samples[item].measure
+        method=samples[item].measure[0]
+        print(f'Currrently measuring {sample_name} with {method}')
+        offset=.17
+    # method is the method number for each sample
+        n_pseudo = n_xr =n_xrf = n_soller = n_gisaxs = n_giwaxs=0
+        if method == "pseudo":
+             pxr_pre(other+offset)
+             pxr(sample_name,item,n_pseudo,other+offset)
+             pxr_post()
+             n_psuedo +=1
 
-        for ii in list(range(len(samp_name))):
-            method=methods[ii][0].lower()
-            other=methods[ii][1]
-            print(ii, "Method= ",method)
+        if method == "soller":
+            soller_pre(other+offset)
+            soller(sample_name,itemn,n_soller,other+offset)
+            soller_post()
+            n_soller += 1
 
-            if method == "pseudo":
-                n_psuedo +=1
-                pxr_pre(x2_start+other)
-                pxr(key,samp_name,n_pseudo)
-                pxr_post()
+        if method == "xrf":
+            xrf_pre(other+offset)
+            xrf(sample_name,item,n_xrf,other+offset)
+            xrf_post()
+            n_xrf += 1
 
-            if method == "soller":
-                n_soller=1
-                soller_pre(x2_start+other)
-                soller(ii,samp_name,n_soller)
-                soller_post()
+        if  method == "xr":
+            xr_pre(other+offset)
+            xr(sample_name,item,n_xr,other+offset)
+            xr_post()
+            n_xr += 1
 
-            if method == "xrf":
-                n_xrf=1
-                xrf_pre(x2_start+other)
-                xrf(ii,samp_name,n_xrf)
-                xrf_post()
+        if method == "gisaxs":
+            gisaxs_pre(other+offset)
+            gisaxs(sample_name,item,n_gisaxs,other+offset)
+            gisaxs_post()
+            n_gisaxs += 1
 
-            if  method == "xr":
-                n_xr=1
-                xr_pre(x2_start+other)
-                xr(ii,samp_name,n_xr)
-                xr_post()
+        if method == "giwaxs":
+            giwaxs_pre(other+offset,n_giwaxs)
+            giwaxs(sample_name,item,n_giwaxs,other+offset)
+            giwaxs_post
+            n_giwaxs += 1
 
-            if method == "gisaxs":
-                n_gisaxs=1
-                gisaxs_pre(x2_start+other)
-                gisaxs(ii,samp_name,n_gisaxs)
-                gisaxs_post()
+        if method == "pressure":
+            print("running pressure with ",other)
 
-            if method == "giwaxs":
-                n_giwaxs=1
-                giwaxs_pre(x2_start+other,n_giwaxs)
-                giwaxs(ii,samp_name,n_giwaxs)
-                giwaxs_post
-
-            if method == "pressure":
-                print("running pressure with ",other)
-
-            if method == "wait":
-                print("running wait with ", other)
+        if method == "wait":
+            print("running wait with ", other)
 
     # yield from det_set_exposure([quadem, lambda_det, pilatus100kA ], exposure_time=1, exposure_number = 1)
     # yield from bps.mv(geo.stblx2,-55)  #move the  Sample Table X2 to the center
