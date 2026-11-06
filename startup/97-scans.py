@@ -35,8 +35,13 @@ def trans2(name,tmp):
 
 
 # Runs a reflectivity scans from a file
-def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=False): 
-    print("starting xr_scan_file,  sample name =",sample_name)
+
+#def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=False): 
+
+#xr_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
+
+def xr_scan_file(file_name,xpos, scan_file, start=None, end=None, scan_dir="None", auto_atten=False,**kwargs):
+    yield from set_mode("XR")
 
     if start == "all":
         start=0
@@ -50,9 +55,8 @@ def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=F
  #       user="ocko"
  #       user="tobias_cornell"
         directory="/home/xf12id1/.ipython/profile_collection/startup/users/"+scan_dir+"/scans/"
-    print(directory)
     
-    tmp=pd.read_csv(directory+scan_name,skiprows=0, sep='\s+')
+    tmp=pd.read_csv(directory+scan_file,skiprows=0, sep='\s+')
 
     scan_p={
     "start":trans1('alpha_start',tmp)[start:end],
@@ -74,7 +78,7 @@ def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=F
     pprint.pprint(scan_p,sort_dicts=False)
     yield from bps.mv(geo.det_mode,1)
     # yield from reflection_scan_full(scan_param=scan_p,
-    #     md={'sample_name': sample_name},
+    #     md={'file_name': sample_name},
     #     detector=lambda_det, 
     #     tilt_stage=False)
     return
@@ -83,8 +87,13 @@ def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=F
 # pprint.pprint(scan_p)
 
 #
-def xrf_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=False):
-    print("auto atten=",auto_atten)
+#def xrf_scan_file(sample_name,xpos, scan_name,start,end,scan_dir="global", auto_atten=False): 
+
+
+
+def xrf_scan_file(file_name, xpos, scan_file, start=None, end=None, scan_dir=None, auto_atten=False,**kwargs):
+    print("in xrf")
+    yield from set_mode("XRF")
 
     if start == "all":
         start=0
@@ -98,9 +107,8 @@ def xrf_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=
  #       user="ocko"
  #       user="tobias_cornell"
         directory="/home/xf12id1/.ipython/profile_collection/startup/users/"+scan_dir+"/scans/"
-    print(directory)
     
-    tmp=pd.read_csv(directory+scan_name,skiprows=0, sep='\s+')
+    tmp=pd.read_csv(directory+scan_file,skiprows=0, sep='\s+')
     print("scan name")
     scan_p={
     "start":trans1('alpha_start',tmp)[start:end],
@@ -120,16 +128,18 @@ def xrf_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=
     pprint.pprint(scan_p,sort_dicts=False)
 
 #     yield from bps.mv(geo.det_mode,1)
-    yield from bps.mv(abs3,1)
+#    yield from bps.mv(abs3,1)
 #     yield from reflection_fluorescence_scan_full(scan_param=scan_p,
-#         md={'sample_name': name},
+#         md={'file_name': name},
 #         detector=xs, 
 #         tilt_stage=False,)
 #     # yield from bps.mv(abs3,0)
     return
 
 
-def soller_scanq(name, block_pos = 0,q_start=1.3,q_end=1.8,npts=21,exp_time=20, x2_direction=1,alpha_i=0.0728, wait_time=5, atten=-1.775): # block edge at -31.5
+def soller_scanq(file_name, xpos=None, block_pos = None, q_start=None ,q_end=None, npts=None, exp_time=None, x2_direction=None, wait_time=None, alpha_i=0.0728, atten=-1.775, **kwargs): 
+    yield from set_mode("Soller")
+    print("starting xrf_scan_file,  sample name =",file_name)
     th_start= (180/np.pi)*np.asin(q_start*geo.wlength/4/np.pi)*2
     th_end  = (180/np.pi)*np.asin(q_end*geo.wlength/4/np.pi)*2
     th_start = float(f"{th_start:0.1f}")
@@ -154,11 +164,13 @@ def soller_scanq(name, block_pos = 0,q_start=1.3,q_end=1.8,npts=21,exp_time=20, 
         "wait_time":wait_time_list,
       }
     pprint.pprint(scan_dict,sort_dicts=False)
+    #print(scan_dict)
+
 
 
     # yield from bps.mov(block.y,block_pos)
     # yield from bps.mv(soller.tran,-6)
-    yield from bps.mv(soller.tran,5.5)
+    # yield from bps.mv(soller.tran,5.5)
 #     x2_position_original = x2.position
 #     yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
 
@@ -169,7 +181,7 @@ def soller_scanq(name, block_pos = 0,q_start=1.3,q_end=1.8,npts=21,exp_time=20, 
 #     yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without extension
 #     print("calling GID_soller")
 #     yield from gid_scan_soller(scan_dict,
-#                                 md={'sample_name': name}, 
+#                                 md={'file_name': name}, 
 #                                 detector = pilatus100kA,
 #                                 alphai = alpha_i,
 #                                 beamstop = None,
@@ -184,24 +196,28 @@ def soller_scanq(name, block_pos = 0,q_start=1.3,q_end=1.8,npts=21,exp_time=20, 
     return
 
 
-def gisaxs_scan(name, incident_angle = 0.0728, x2_direction=1, bs_pos = -15.82, atten = 0, exposure_time=1):
+#def gisaxs_scan(file_name, x2_direction=None, atten = 0, exposure_time=1, incident_angle = 0.0728,bs_pos = -15.82, **kwargs) :#
+gisaxs_init = {"x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
 
-    '''For Pilatus1m
-    SAXSY1: 15
-    SAXSY2: 25
-    det2_off(SAXS): -10.8
-    det x = -0.7
-    det y = 0
-    bs_x: -15.82
-    bs_y: 25
+def gisaxs_scan(file_name,  x2_direction=1, atten = 0, exposure_time=1, incident_angle = 0.0728, bs_pos = -15.82, **kwargs):
+    yield from set_mode("GISAXS")
+
+    # '''For Pilatus1m
+    # SAXSY1: 
+    # SAXSY2: 25
+    # det2_off(SAXS): -10.8
+    # det x = -0.7
+    # det y = 0
+    # bs_x: -15.82
+    # bs_y: 25
 
     
-    '''
-    det_saxs_x = -0.7
+    # '''
+   # det_saxs_x = -0.7
     det_saxs_y_list         = [0, 0]
     det_saxs_y_offset_list  = [0, 1]
     stth_list               = [0, 0]
-    exp_time_list           = [exposure_time, exposure_time] 
+    exp_time_list           = [exposure_time, exposure_time]
     x2_offset_list          = [0*x2_direction, 0*x2_direction]
     atten_2_list            = [atten for _ in range(len(det_saxs_y_list))]
     wait_time_list          = [10, 10]
@@ -217,30 +233,36 @@ def gisaxs_scan(name, incident_angle = 0.0728, x2_direction=1, bs_pos = -15.82, 
         "wait_time":wait_time_list,
         "beam_stop_x":beam_stop_x,
         "beam_stop_y":beam_stop_y,}
+    
+    pprint.pprint(scan_dict,sort_dicts=False)
 
-    # block_yo = block.y.position #
-    # yield from bps.mov(block.y,60)
+#     # block_yo = block.y.position #
+#     # yield from bps.mov(block.y,60)
 
-    yield from bps.mv(geo.det_mode,2)
-    yield from bps.mv(detsaxs.x, det_saxs_x)
-    # yield from beta_gid(2.3,0)
-    # yield from bps.mv(abs2,0)
-   # yield from bps.mv(fp_saxs.y1,20,fp_saxs.y2,40)# with vertical mirrors
-    yield from bps.mv(fp_saxs.y1,20-5,fp_saxs.y2,40-5)# with CRLS
-    print("calling GID_stitch")
-    yield from gid_scan_stitch(scan_dict,
-                                md={'sample_name': name}, 
-                                detector = pilatus1m,
-                                alphai = incident_angle)
+#     yield from bps.mv(geo.det_mode,2)
+#     yield from bps.mv(detsaxs.x, det_saxs_x)
+#     # yield from beta_gid(2.3,0)
+#     # yield from bps.mv(abs2,0)
+#    # yield from bps.mv(fp_saxs.y1,20,fp_saxs.y2,40)# with vertical mirrors
+#     yield from bps.mv(fp_saxs.y1,20-5,fp_saxs.y2,40-5)# with CRLS
+#     print("calling GID_stitch")
+#     yield from gid_scan_stitch(scan_dict,
+#                                 md={'file_name': name}, 
+#                                 detector = pilatus1m,
+#                                 alphai = incident_angle)
 
-    yield from bps.mv(abs2,5)
-    # block_yo = block.y.position
-    # yield from bps.mov(block.y,block_yo)
+#     yield from bps.mv(abs2,5)
+#     # block_yo = block.y.position
+#     # yield from bps.mov(block.y,block_yo)
 
-atten_slit =0
-def giwaxs_scan(name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, 
-                 exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955):
 
+#def giwaxs_scan(name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, 
+#                 exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955):
+
+def giwaxs_scan(file_ame, **kwargs):
+    yield from set_mode("GIWAXS")
+
+                
 
     '''For Pilatus300k for GIWAXS
 
@@ -265,33 +287,36 @@ def giwaxs_scan(name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, a
         "beam_stop_x":beam_stop_x,
         "beam_stop_y":beam_stop_y,}
 
-    # block_yo = block.y.position #
-    yield from bps.mov(block.y,block_pos)
-    if use_slitx2:
-            x2_position_original = x2.position
-            yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
+    pprint.pprint(scan_dict,sort_dicts=False)
+
+    # # block_yo = block.y.position #
+    # yield from bps.mov(block.y,block_pos)
+    # if use_slitx2:
+    #         x2_position_original = x2.position
+    #         yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
 
 
-    yield from bps.mv(geo.det_mode,3)
-    # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,40)# with CRLS
-    # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# use the gid setting
-    yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without extension
-    print("calling GID_stitch")
-    yield from gid_scan_stitch(scan_dict,
-                                md={'sample_name': name}, 
-                                detector = pilatus300k,
-                                alphai = incident_angle)
+    # yield from bps.mv(geo.det_mode,3)
+    # # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,40)# with CRLS
+    # # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# use the gid setting
+    # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without extension
+    # print("calling GID_stitch")
+    # yield from gid_scan_stitch(scan_dict,
+    #                             md={'file_name': name}, 
+    #                             detector = pilatus300k,
+    #                             alphai = incident_angle)
 
-    yield from bps.mv(abs2,5)
-    yield from bps.mov(block.y,60)
-    if use_slitx2:
-        # yield from bps.mov(slit_x2,-9.5)
-        yield from slitX2_out()
+    # yield from bps.mv(abs2,5)
+    # yield from bps.mov(block.y,60)
+    # if use_slitx2:
+    #     # yield from bps.mov(slit_x2,-9.5)
+    #     yield from slitX2_out()
 
 
 
 
 def giwaxs_scan_bkg(name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955, sh_offset = -1):
+    yield from set_mode("GIWAXS")
 
 
     '''For Pilatus300k for GIWAXS, lower the sh by -1 to get a chamber background
@@ -317,29 +342,32 @@ def giwaxs_scan_bkg(name, incident_angle = 0.0728, x2_direction=1, block_pos = 6
         "beam_stop_x":beam_stop_x,
         "beam_stop_y":beam_stop_y,}
 
-    # block_yo = block.y.position #
-    yield from bps.mov(block.y,block_pos)
-    if use_slitx2:
-            x2_position_original = x2.position
-            yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
+    pprint.pprint(scan_dict,sort_dicts=False)
 
 
-    yield from bps.mv(geo.det_mode,3)
-    # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,40)# with CRLS
-    # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# use the gid setting
-    yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without SAXS flight path extension
-    print("calling GID_stitch")
-    yield from gid_scan_stitch(scan_dict,
-                                md={'sample_name': name}, 
-                                detector = pilatus300k,
-                                alphai = incident_angle,
-                                sh_offset = sh_offset)
+    # # block_yo = block.y.position #
+    # yield from bps.mov(block.y,block_pos)
+    # if use_slitx2:
+    #         x2_position_original = x2.position
+    #         yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
 
-    yield from bps.mv(abs2,5)
-    yield from bps.mov(block.y,60)
-    if use_slitx2:
-        # yield from bps.mov(slit_x2,-9.5)
-        yield from slitX2_out()
+
+    # yield from bps.mv(geo.det_mode,3)
+    # # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,40)# with CRLS
+    # # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# use the gid setting
+    # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without SAXS flight path extension
+    # print("calling GID_stitch")
+    # yield from gid_scan_stitch(scan_dict,
+    #                             md={'sample_name': name}, 
+    #                             detector = pilatus300k,
+    #                             alphai = incident_angle,
+    #                             sh_offset = sh_offset)
+
+    # yield from bps.mv(abs2,5)
+    # yield from bps.mov(block.y,60)
+    # if use_slitx2:
+    #     # yield from bps.mov(slit_x2,-9.5)
+    #     yield from slitX2_out()
 
 
 
@@ -392,8 +420,10 @@ def gixos_transverse_nochamber(name, qxy_list = [0.04], alpha = 0.0728, atten = 
         if x2_per_step != 0:
             yield from bps.mvr(x2, x2_per_step)
 
-def gixos_multiqxy(name, alpha = 0.0728, num_point = 1, exp_time = 30, x2_per_step = 0, 
-                   atten = -1.5, soller_tran=-1.5, slit='slit_x2'):
+#def gixos_multiqxy(name, alpha = 0.0728, num_point = 1, exp_time = 30, x2_per_step = 0, 
+ #                  atten = -1.5, soller_tran=-1.5, slit='slit_x2'):
+
+def gixos_multiqxy(name, **kwargs):
     '''
     slit: select the slits to be used in the PXR, HZ 2026-03-13
     1) 'slit_x2': using the slit_x2 insde the chamber
@@ -466,7 +496,7 @@ def printSampleInfo(samp_name_dict,sam_x2_pos,xr_run_dict,xrf_run_dict,gid_run_d
     for key in samp_name_dict:
         measure_type = []
         if xr_run_dict[key]: 
-            measure_type.append('XRR')
+            measure_type.append('XRR')**kwargs
         if xrf_run_dict[key]: 
             measure_type.append('XRF')
         if gid_run_dict[key]: 
