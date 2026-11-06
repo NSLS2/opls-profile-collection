@@ -115,8 +115,8 @@ class LambdaXSPD(Lambda):
 
 
 
-lambda_det = LambdaLegacy('XF:12ID1-ES{Det:Lambda}', name='lambda250k')
-# lambda_det = LambdaXSPD('XF:12ID1-ES{XSPD-Det:2}', name='lambda250k')
+#lambda_det = LambdaLegacy('XF:12ID1-ES{Det:Lambda}', name='lambda250k')
+lambda_det = LambdaXSPD('XF:12ID1-ES{XSPD-Det:2}', name='lambda250k')
 lambda_det.tiff.kind = 'hinted'
 
 lambda_det.roi1.kind = 'hinted'
