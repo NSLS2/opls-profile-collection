@@ -39,7 +39,7 @@ Repeat the procedure above for the next sample
 set_project_name('1_PFOS')
 # currently working at /nsls2/data/smi/proposals/2026-3/pass-319804/projects/1_PFOS/
 
-
+# 
 atten_slit = 0 # -1.767 # -1.7843
 soller_tran_soller = 4 # 5.5 # 5.5 # 4
 soller_tran_gap = -1.5 # 4 # 5 # to use the center gap on the soller slits
@@ -69,22 +69,41 @@ class Sample():
         self.other = other
         self.measure = measure
 
+x2_pos1 =-60
+x2_pos2 = 10
+x2_pos3 = 50
+
 xr_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 xrf_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 soller_init ={"x2_direction":1,"block_pos": 0,"q_start":1.3,"q_end":1.8,"npts":21,"exp_time":20, "alpha_i":0.0728, "wait_time":5,"atten":-1.775}
 gisaxs_init = {"x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
-giwaxs_init = {"x2_direction":1,"atten": 0, "exposure_time": 1, "incident_angle": 0.0728, "block_pos": 60, "th": 0, "use_slitx2": True, "slit_x2_offset_block": 43.955, "sh_offset": 0}
-giwaxs_init_bkg = {"x2_direction":1,"atten": 0, "exposure_time": 1, "incident_angle": 0.0728, "block_pos": 60, "th": 0, "use_slitx2": True, "slit_x2_offset_block": 43.955, "sh_offset": -1}
-pseudo_init= {"alpha":0.0728, "num_point": 1, "exp_time": 30, "x2_per_step": 0, "atten": -1.5, "soller_tran":-1.5, "slit":'slit_x2'}
+giwaxs_init = {"incident_angle": 0.0728, "atten": 0, "exposure_time": 1.7, "tth": 0, "x2_direction":17 , "block_pos": 60, "use_slitx2": True, "sh_offset": -1}
+giwaxs_bkg_init = {"incident_angle": 0.0728, "atten": 0, "exposure_time": 1.7, "tth": 0, "x2_direction":17 , "block_pos": 60, "use_slitx2": True, "sh_offset": -1}
+pseudo_init= {"alpha":0.0728, "num_point": 2, "exp_time": 30, "x2_per_step": 0, "atten": -1.5, "soller_tran":-1.5, "slit":'slit_x2'}
 
+offset=0
+# the counter is used as a file discriptor
+counter=0
+# all this is called samples, it is really a technique run and may or may not canple the sample and sample position
 
 samples = []
-samples.append(Sample("sample_1", 17,[ "soller",1,soller_init]))
-samples.append(Sample("sample_1", 17,[ "xr",1,xr_init]))
-samples.append(Sample("sample_1", 17,[ "xrf",1,xrf_init]))
-samples.append(Sample("sample_1", 17,[ "gisaxs",1,gisaxs_init]))
-samples.append(Sample("sample_1", 17,[ "giwaxs",1,giwaxs_init]))
+samples.append(Sample("sample_1", x2_pos1,[ "soller",1,soller_init]))
+samples.append(Sample("sample_1", x2_pos1,[ "xr",1,xr_init]))
+samples.append(Sample("sample_1", x2_pos1,[ "xrf",1,xrf_init]))
+samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",1,gisaxs_init]))
+samples.append(Sample("sample_n", x2_pos2,[ "giwaxs",1,giwaxs_init]))
+samples.append(Sample("sample_bg",x2_pos3,[ "giwaxs_bkg",1,giwaxs_bkg_init]))
 
+
+#def giwaxs_scan(file_name, incident_angle = 0.0728, atten = 6, exposure_time=1, tth=0,  x2_direction=1, block_pos = 60, use_slitx2 = False, sh_offset = -1,**kwargs):
+# def giwaxs_scan(file_name, **kwargs):
+# #   print("giwaxs_scan_bkg", "exposure time==",exposure_time,"x2_direction =",x2_direction)
+# #
+#  #   yield from set_mode("GIWAXS")
+#     yield from set_mode("Soller")
+#     print(file_name)
+#     pprint.pprint(kwargs)
+#     return
 
 
 
@@ -159,7 +178,7 @@ def gisaxs(item,index,x2_pos):
     file_name=get_name(samples[item].name,'giasaxs',index)
     extras=samples[item].measure[2]
     print("Starting GISAXS scan with file- ",file_name, "  at x2=",x2_pos,extras)
-    yield from gisaxs_scan(file_name,**extras)
+    yield from gisaxs_scan(file_name, **extras)
 
 
 # This is where the type of GIWAXS scans are defined.  This does not read from a file.
@@ -168,15 +187,15 @@ def giwaxs(item,index,x2_pos):
     yield from set_mode("GIWAXS")
     file_name=get_name(samples[item].name,'giwaxs',index)
     extras=samples[item].measure[2]
-    print("Starting GIWAXS scan with file- ",name, "  at x2=",x2_pos)
-    yield from giwaxs_scan(file_name,**extras)
+    print("Starting GIWAXS scan with file- ",file_name, "  at x2=",x2_pos)
+    yield from giwaxs_scan(file_name, **extras)
 
 def giwaxs_bkg(item,index,x2_pos):
     yield from set_mode("GIWAXS")
     file_name=get_name(samples[item].name,'giwaxs_bkg',index)
     extras=samples[item].measure[2]
-    print("Starting GIWAXS scan with file- ",name, "  at x2=",x2_pos)
-    yield from giwaxs_scan_bkg(file_name,**extras)
+    print("Starting GIWAXS scan with file- ",file_name, "  at x2=",x2_pos)
+    yield from giwaxs_scan_bkg(file_name, **extras)
 
 # This is where the type of PSEUDO scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
@@ -318,61 +337,63 @@ def get_name(name,index,type):
 
 def run():
     if check_samples() ==0:
+        print("\a\a\a")
         print("\033[91mERROR: WILL NOT TAKE DATA\033[0m")
+        print("\a\a\a")
         return
     all_list = list(range(len(samples)))
-    print(all_list)
+    counter=0 
+    n_pseudo = n_xr =n_xrf = n_soller = n_gisaxs = n_giwaxs=0
+
     # sample_n is the sample number
     for item in all_list:
+        counter  +=1
         sample_name=samples[item].name
         other=samples[item].other
         method=samples[item].measure[0]
         print(f'\n\nCurrrently measuring {sample_name} with {method}')
-        offset=.17
     # method is the method number for each sample
-        n_pseudo = n_xr =n_xrf = n_soller = n_gisaxs = n_giwaxs=0
         if method == "pseudo":
+             n_psuedo =counter
              yield from pseudo_pre(other+offset)
              yield from pseudo(item,n_pseudo,other+offset)
              yield from pseudo_post()
-             n_psuedo =item+1
 
         if method == "soller":
+            n_soller = counter
             #yield from soller_pre(other+offset)
             yield from soller(item,n_soller,other+offset)
             #yield from soller_post()
-            n_soller = item+1
 
         if method == "xrf":
-          #  yield from xrf_pre(other+offset)
+            n_xrf = counter
+          #  yield from xrfpre(other+offset)
             yield from xrf(item,n_xrf,other+offset)
            # yield from xrf_post()
-            n_xrf = item+1
 
         if  method == "xr":
+            n_xr = counter
             #yield from xr_pre(other+offset)
             yield from xr(item,n_xr,other+offset)
             #yield from xr_post()
-            n_xr = item+1
 
         if method == "gisaxs":
+            n_gisaxs = counter
            # yield from gisaxs_pre(other+offset)
             yield from gisaxs(item,n_gisaxs,other+offset)
            # yield from gisaxs_post()
-            n_gisaxs = item+1
 
         if method == "giwaxs":
+            n_giwaxs = counter
           #  yield from giwaxs_pre(other+offset,n_giwaxs)
             yield from giwaxs(item,n_giwaxs,other+offset)
            # yield from giwaxs_post
-            n_giwaxs = item+1
-
 
         if method == "giwaxs_bkg":
-            yield from giwaxs_pre(other+offset,n_giwaxs)
+            n_giwaxs = counter
+         #   yield from giwaxs_pre(other+offset,n_giwaxs)
             yield from giwaxs_bkg(item,n_giwaxs,other+offset)
-            yield from giwaxs_post
-            n_giwaxs = item+1
+         #   yield from giwaxs_post
 
 
         if method == "pressure":

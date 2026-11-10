@@ -447,7 +447,10 @@ class Geometry(PseudoPositioner):
         # Code for typing to correct for the modulatuin in the sh
 
         tmp=  -(self.L2.get() + self.L4.get()) * np.tan(_alpha) / np.cos(_tth)
-        sh_user= tmp-geo.sh.user_offset.get() 
+        if IN_SIM_MODE:
+            sh_user = tmp-geo.sh.readback.get()
+        else:
+            sh_user= tmp-geo.sh.user_offset.get() 
         #sh= tmp + 0.0015*np.sin(np.pi*2*(sh_user/0.254)+self.sh_phase.get())
         
         # sh = self.sh.position
@@ -654,7 +657,9 @@ class SynGeometry(Geometry):
     oh = Cpt(SynAxis, doc="output arm vertical rotation", value=0.0)
 
 # changed to True to test out PYMCA simulation
-IN_SIM_MODE = False # bool(sim_flag.get() > 0)
+IN_SIM_MODE = True #False # bool(sim_flag.get() > 0)
+if IN_SIM_MODE:
+    print('In Simulation Mode!')
 # Prefix the PV with "S" for simulations
 
 if IN_SIM_MODE:

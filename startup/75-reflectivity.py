@@ -391,13 +391,21 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
             ### this is a quick patch for loss the incident angle. 2024/11/22
             # THIS IS A SECOND ALPHA BETA MOVE
             yield from bps.sleep(5)
-            if abs(geo.ia.user_setpoint.value-alpha)>0.001:
-                print(f'Target ia {alpha}, current ia {geo.ia.user_setpoint.value}.')
-                yield from bps.mv(geo.ia, alpha)
+            if IN_SIM_MODE:
+                if abs(geo.ia.readback.get()-alpha)>0.001:
+                    print(f'Target ia {alpha}, current ia {geo.ia.readback.get()}.')
+                    yield from bps.mv(geo.ia, alpha)
+                if abs(geo.oa.readback.get()-alpha)>0.001:
+                    print(f'Target oa {alpha}, current ia {geo.oa.readback.get()}.')
+                    yield from bps.mv(geo.oa, alpha)
+            else:
+                if abs(geo.ia.user_setpoint.value-alpha)>0.001:
+                    print(f'Target ia {alpha}, current ia {geo.ia.user_setpoint.value}.')
+                    yield from bps.mv(geo.ia, alpha)
 
-            if abs(geo.oa.user_setpoint.value-alpha)>0.001:
-                print(f'Target oa {alpha}, current ia {geo.oa.user_setpoint.value}.')
-                yield from bps.mv(geo.oa, alpha)
+                if abs(geo.oa.user_setpoint.value-alpha)>0.001:
+                    print(f'Target oa {alpha}, current ia {geo.oa.user_setpoint.value}.')
+                    yield from bps.mv(geo.oa, alpha)
 
         #yield from mabt(geo.alpha=0,geo.samchi=x,geo.beta=2*x)
         fraction  = (alpha-alpha_start)/(alpha_stop-alpha_start)

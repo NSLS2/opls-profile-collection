@@ -32,8 +32,6 @@ def trans1(name,tmp):
 # and returns the result as a standard Python list.
 def trans2(name,tmp):
     return [try_int_safe(item) for item in tmp.loc[name].tolist()]
-
-
 # Runs a reflectivity scans from a file
 
 #def xr_scan_file(sample_name,scan_name,start,end,scan_dir="global", auto_atten=False): 
@@ -197,7 +195,7 @@ def soller_scanq(file_name, xpos=None, block_pos = None, q_start=None ,q_end=Non
 
 
 #def gisaxs_scan(file_name, x2_direction=None, atten = 0, exposure_time=1, incident_angle = 0.0728,bs_pos = -15.82, **kwargs) :#
-gisaxs_init = {"x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
+#gisaxs_init = {"x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
 
 def gisaxs_scan(file_name,  x2_direction=1, atten = 0, exposure_time=1, incident_angle = 0.0728, bs_pos = -15.82, **kwargs):
     yield from set_mode("GISAXS")
@@ -259,21 +257,24 @@ def gisaxs_scan(file_name,  x2_direction=1, atten = 0, exposure_time=1, incident
 #def giwaxs_scan(name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, 
 #                 exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955):
 
-def giwaxs_scan(file_ame, **kwargs):
+# ERROR, Ben HAD TO SET EXPOSURE TIME TO A CONSTANT. also x_direction
+    return
+
+
+def giwaxs_scan(file_name, incident_angle = 0.0728, atten = 6, exposure_time=1, tth=0,  x2_direction=1, block_pos = 60, use_slitx2 = False, sh_offset = -1,**kwargs):
     yield from set_mode("GIWAXS")
 
-                
 
     '''For Pilatus300k for GIWAXS
 
     '''
     det_saxs_y_list         = [0]
     det_saxs_y_offset_list  = [0]
-    stth_list               = [tth]
+    stth_list               = [0]
     exp_time_list           = [exposure_time] 
-    x2_offset_list          = [0*x2_direction]
+    x2_offset_list          = [0]
     atten_2_list            = [atten for _ in range(len(det_saxs_y_list))]
-    wait_time_list          = [5]
+    wait_time_list          = [1]
     beam_stop_x             = [bstop.x.position for _ in range(len(det_saxs_y_list))]
     beam_stop_y             = [bstop.y.position for _ in range(len(det_saxs_y_list))] 
 
@@ -286,9 +287,8 @@ def giwaxs_scan(file_ame, **kwargs):
         "wait_time":wait_time_list,
         "beam_stop_x":beam_stop_x,
         "beam_stop_y":beam_stop_y,}
-
+    
     pprint.pprint(scan_dict,sort_dicts=False)
-
     # # block_yo = block.y.position #
     # yield from bps.mov(block.y,block_pos)
     # if use_slitx2:
@@ -300,7 +300,6 @@ def giwaxs_scan(file_ame, **kwargs):
     # # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,40)# with CRLS
     # # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# use the gid setting
     # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without extension
-    # print("calling GID_stitch")
     # yield from gid_scan_stitch(scan_dict,
     #                             md={'file_name': name}, 
     #                             detector = pilatus300k,
@@ -311,24 +310,25 @@ def giwaxs_scan(file_ame, **kwargs):
     # if use_slitx2:
     #     # yield from bps.mov(slit_x2,-9.5)
     #     yield from slitX2_out()
+    return
 
 
 
-
-def giwaxs_scan_bkg(name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955, sh_offset = -1):
+# def giwaxs_scan_bkg(file_name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955, sh_offset = -1):
+def giwaxs_scan_bkg(file_name, incident_angle = 0.0728, block_pos = 60, atten = 6, exposure_time=1, tth=0, use_slitx2 = False, sh_offset = -1,**kwargs):
     yield from set_mode("GIWAXS")
 
 
-    '''For Pilatus300k for GIWAXS, lower the sh by -1 to get a chamber background
+    '''For Pilatus300k for GIWAXS
 
     '''
     det_saxs_y_list         = [0]
     det_saxs_y_offset_list  = [0]
-    stth_list               = [tth]
+    stth_list               = [0]
     exp_time_list           = [exposure_time] 
-    x2_offset_list          = [0*x2_direction]
+    x2_offset_list          = [0]
     atten_2_list            = [atten for _ in range(len(det_saxs_y_list))]
-    wait_time_list          = [5]
+    wait_time_list          = [1]
     beam_stop_x             = [bstop.x.position for _ in range(len(det_saxs_y_list))]
     beam_stop_y             = [bstop.y.position for _ in range(len(det_saxs_y_list))] 
 
@@ -341,7 +341,7 @@ def giwaxs_scan_bkg(name, incident_angle = 0.0728, x2_direction=1, block_pos = 6
         "wait_time":wait_time_list,
         "beam_stop_x":beam_stop_x,
         "beam_stop_y":beam_stop_y,}
-
+    
     pprint.pprint(scan_dict,sort_dicts=False)
 
 
@@ -358,7 +358,7 @@ def giwaxs_scan_bkg(name, incident_angle = 0.0728, x2_direction=1, block_pos = 6
     # yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without SAXS flight path extension
     # print("calling GID_stitch")
     # yield from gid_scan_stitch(scan_dict,
-    #                             md={'sample_name': name}, 
+    #                             md={'file_name': name}, 
     #                             detector = pilatus300k,
     #                             alphai = incident_angle,
     #                             sh_offset = sh_offset)
@@ -368,6 +368,7 @@ def giwaxs_scan_bkg(name, incident_angle = 0.0728, x2_direction=1, block_pos = 6
     # if use_slitx2:
     #     # yield from bps.mov(slit_x2,-9.5)
     #     yield from slitX2_out()
+    return
 
 
 
