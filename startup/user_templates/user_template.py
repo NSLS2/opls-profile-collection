@@ -76,6 +76,9 @@ x2_pos1 =-60
 x2_pos2 = 10
 x2_pos3 = 50
 
+checks_init1 = {"method_mode":"XR","phi":False, "ih":False, "tth":False, "astth":False, "coarse":True}
+checks_init2 = {"method_mode":"Soller","coarse":True}
+
 xr_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 xrf_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 soller_init ={"x2_direction":1,"block_pos": 0,"q_start":1.3,"q_end":1.8,"npts":21,"exp_time":20, "alpha_i":0.0728, "wait_time":5,"atten":-1.775}
@@ -87,16 +90,19 @@ pseudo_init= {"alpha":0.0728, "num_point": 2, "exp_time": 30, "x2_per_step": 0, 
 # all this is called samples, it is really a technique run and may or may not canple the sample and sample position
 # this version has two variables for the x2 position, one could be removed
 samples = []
-samples.append(Sample("sample_1", x2_pos1,[ "soller",1,soller_init]))
-samples.append(Sample("sample_1", x2_pos1,[ "xr",1,xr_init]))
-samples.append(Sample("sample_1", x2_pos1,[ "xrf",1,xrf_init]))
-samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",1,gisaxs_init]))
-samples.append(Sample("sample_n", x2_pos2,[ "giwaxs",1,giwaxs_init]))
-samples.append(Sample("sample_bg",x2_pos3,[ "giwaxs_bkg",1,giwaxs_bkg_init]))
+samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init1]))
+samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init2]))
+
+# samples.append(Sample("sample_1", x2_pos1,[ "soller",soller_init]))
+# samples.append(Sample("sample_1", x2_pos1,[ "xr",xr_init]))
+# samples.append(Sample("sample_1", x2_pos1,[ "xrf",xrf_init]))
+# samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
+# samples.append(Sample("sample_n", x2_pos2,[ "giwaxs",giwaxs_init]))
+# samples.append(Sample("sample_bg",x2_pos3,[ "giwaxs_bkg",giwaxs_bkg_init]))
 
 
 # This is the routine that checks to make sure that the same is allowed
-allowed_list=['xr','xrf','gisaxs','giwaxs','giwaxs_bkg','soller','pseudo']
+allowed_list=['xr','xrf','gisaxs','giwaxs','giwaxs_bkg','soller','pseudo', 'checks']
 def check_samples():
     set_allowed=1
     all_list = list(range(len(samples)))
@@ -123,7 +129,7 @@ def check_samples():
 def xr(item,index,x2_pos):
     yield from set_mode("XR")
     file_name=get_name(samples[item].name,'xr',index)
-    extras=samples[item].measure[2]
+    extras=samples[item].measure[1]
     print("Starting XR scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
     yield from xr_scan_file(file_name,x2_pos, "xr_scan1.csv", **extras)
 
@@ -134,7 +140,7 @@ def xr(item,index,x2_pos):
 def xrf(item,index,x2_pos):
     yield from set_mode("XRF")
     file_name=get_name(samples[item].name,'xrf',index)
-    extras=samples[item].measure[2]
+    extras=samples[item].measure[1]
     print("Starting XRF scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
     yield from xrf_scan_file(file_name,x2_pos,"xrf_scan1.csv", **extras)
 
@@ -144,7 +150,7 @@ def xrf(item,index,x2_pos):
 def soller(item,index,x2_pos):
     yield from set_mode("Soller")
     file_name=get_name(samples[item].name,'soller',index)
-    extras=samples[item].measure[2]
+    extras=samples[item].measure[1]
     print("Starting Soller scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
     yield from soller_scanq(file_name, **extras) # block edge at -31.5
 
@@ -153,7 +159,7 @@ def soller(item,index,x2_pos):
 def gisaxs(item,index,x2_pos):
     yield from set_mode("GISAXS")
     file_name=get_name(samples[item].name,'giasaxs',index)
-    extras=samples[item].measure[2]
+    extras=samples[item].measure[1]
     print("Starting GISAXS scan with file- ",file_name, "  at x2=",x2_pos,extras)
     yield from gisaxs_scan(file_name, **extras)
 
@@ -162,14 +168,14 @@ def gisaxs(item,index,x2_pos):
 def giwaxs(item,index,x2_pos):
     yield from set_mode("GIWAXS")
     file_name=get_name(samples[item].name,'giwaxs',index)
-    extras=samples[item].measure[2]
+    extras=samples[item].measure[1]
     print("Starting GIWAXS scan with file- ",file_name, "  at x2=",x2_pos)
     yield from giwaxs_scan(file_name, **extras)
 
 def giwaxs_bkg(item,index,x2_pos):
     yield from set_mode("GIWAXS")
     file_name=get_name(samples[item].name,'giwaxs_bkg',index)
-    extras=samples[item].measure[2]
+    extras=samples[item].measure[1]
     print("Starting GIWAXS scan with file- ",file_name, "  at x2=",x2_pos)
     yield from giwaxs_scan_bkg(file_name, **extras)
 
@@ -183,6 +189,30 @@ def pseudo(item,index,x2_pos):
     print("Starting PSEUDO scan with file- ",name, "  at x2=",x2_pos)
     yield from gixos_multiqxy(file_name_dict[number]+'_pxr', alpha = 0.0728, num_point = 1, exp_time = 30, x2_per_step = 0, atten=-1.5, slit='slit_x2')
 
+
+# THis allows you to configure a line with sample checks
+def checks(item,index,x2_pos,method_mode="XR",phi=True, ih=True, tth=True, astth=True, coarse=True, **kwargs):
+    pprint.pprint(kwargs)
+    #print(f"checks({', '.join(f'{k}={v}' for k, v in kwargs.items())})")
+    yield from set_mode(method_mode)
+    print("Checking the alignment at x2=",x2_pos, " using mode: ",method_mode)
+    if phi    == True:
+        print("running phi check")
+      #  check_phi()
+    if ih     == True:
+        print("running ih check")
+       #check_ih()
+    if tth    == True:
+        print("running tth check")
+        #check_tth()
+    if astth  == True:
+        print("running astth check")
+       # check_astth()
+    # yield from slitX2_out() # what if we are not using x2
+    # yield from bps.mv(geo.stblx2,samp_x2_start)
+    if coarse == True:
+        print("running coarse sample height check")
+      #  check_coarse()
 
 # Pre scans
 def xr_pre(samp_x2_start):
@@ -275,7 +305,7 @@ def xrf_post():
     yield from det_set_exposure([lambda_det,quadem], exposure_time=1, exposure_number = 1)
     yield from bps.mv(flow2,2.1)
     yield from bps.mv(flow1,0)
-    print('XRF Soller is done')
+    print('XRF  is done')
 
 def gisaxs_post():
     yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
@@ -294,17 +324,6 @@ def pseudo_post():
     yield from slitX2_out()
     print('Pseudo/GIOXS is done')  
 
-def align():
-    # need to make sure shutter is open and the attenuator set
-    yield from check_phi() #resets phi, the crystal deflector at mab(0,0,0)
-    yield from check_ih()
-    yield from check_astth()
-
-def coarse(samp_x2_start):
-    # we will need to figure out how to set the mode
-    yield from bps.mv(geo.stblx2,samp_x2_start)  #move the  Sample Table X2 to xpos
-    yield from sample_height_set_coarse()  
-
 
 #file naming, could be extended to add pressure or run number
 def get_name(name,index,type):
@@ -312,8 +331,6 @@ def get_name(name,index,type):
 
 # we probably need a kibron mode where we add the pressure to the name This was sometimes used in the old code
 #samp_name_new = samp_name+f'_P{one_pressure}'samples[item].name
-
-
 
 def run():
     if check_samples() ==0:
@@ -333,53 +350,52 @@ def run():
         method=samples[item].measure[0]
         print(f'\n\nCurrrently measuring {sample_name} with {method}')
     # method is the method number for each sample
+
+        if method =="checks":
+            extras=samples[item].measure[1]
+            yield from checks(item,0,other,**extras)
+
         if method == "pseudo":
              n_psuedo =counter
-             yield from pseudo_pre(other+offset)
-             yield from pseudo(item,n_pseudo,other+offset)
+             yield from pseudo_pre(other)
+             yield from pseudo(item,n_pseudo,other)
              yield from pseudo_post()
 
         if method == "soller":
             n_soller = counter
-            #yield from soller_pre(other+offset)
-            yield from soller(item,n_soller,other+offset)
+            #yield from soller_pre(other)
+            yield from soller(item,n_soller,other)
             #yield from soller_post()
 
         if method == "xrf":
             n_xrf = counter
-          #  yield from xrfpre(other+offset)
-            yield from xrf(item,n_xrf,other+offset)
+          #  yield from xrfpre(other)
+            yield from xrf(item,n_xrf,other)
            # yield from xrf_post()
 
         if  method == "xr":
             n_xr = counter
-            #yield from xr_pre(other+offset)
-            yield from xr(item,n_xr,other+offset)
+            #yield from xr_pre(other)
+            yield from xr(item,n_xr,other)
             #yield from xr_post()
 
         if method == "gisaxs":
             n_gisaxs = counter
-           # yield from gisaxs_pre(other+offset)
-            yield from gisaxs(item,n_gisaxs,other+offset)
+           # yield from gisaxs_pre(other)
+            yield from gisaxs(item,n_gisaxs,other)
            # yield from gisaxs_post()
 
         if method == "giwaxs":
             n_giwaxs = counter
-          #  yield from giwaxs_pre(other+offset,n_giwaxs)
-            yield from giwaxs(item,n_giwaxs,other+offset)
+          #  yield from giwaxs_pre(other,n_giwaxs)
+            yield from giwaxs(item,n_giwaxs,other)
            # yield from giwaxs_post
 
         if method == "giwaxs_bkg":
             n_giwaxs = counter
-         #   yield from giwaxs_pre(other+offset,n_giwaxs)
-            yield from giwaxs_bkg(item,n_giwaxs,other+offset)
+         #   yield from giwaxs_pre(other,n_giwaxs)
+            yield from giwaxs_bkg(item,n_giwaxs,other)
          #   yield from giwaxs_post
-
-        if method == "align":
-            yield from align()
-
-        if method == "coarse":
-            yield from coarse(other)
 
         if method == "pressure":
             print("running pressure with ",other)
