@@ -1,4 +1,6 @@
 import pprint
+import time
+
 
 '''
 ######################################################
@@ -47,6 +49,14 @@ soller_tran_gap = -1.5 # 4 # 5 # to use the center gap on the soller slits
 constant_he_gid = 2.6 # 2.5 #2.6
 collimator_he_rate = 2.2 
 counter=0 ## the counter is used as a file discriptor
+Sensor1 = 17.8
+Sensor2 = 28.99
+KibronP = 132.111
+global File_type, Epoch_start, Simulate
+# allowed File_type Senso1, Senso2, Kibron, None, time
+File_type = "Sensor1"
+Epoch_start = time.time()
+Simulate = False
 # slit_x2 to sample distance: ~87mm, HZ, 2025/06/20
 
 #Not sure where to store the following
@@ -72,12 +82,23 @@ class Sample():
         self.other = other
         self.measure = measure
 
+class Sample():
+    def __init__(self, name, other, measure):
+        self.name = name
+        self.other = other
+        self.measure = measure
+
+
 x2_pos1 =-60
 x2_pos2 = 10
 x2_pos3 = 50
 
-checks_init1 = {"method_mode":"XR","phi":False, "ih":False, "tth":False, "astth":False, "coarse":True}
-checks_init2 = {"method_mode":"Soller","coarse":True}
+checks_init_all = {"method_mode":"Soller","coarse":True,"file_type": "Time","epoch_start": False}
+xr_init_all ={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
+
+checks_init1 = {"method_mode":"XR","phi":False, "ih":False, "tth":False, "astth":False, "coarse":True,"file_type":"Kibron"}
+checks_init2 = {"method_mode":"XR","coarse":True,"file_type": "Sensor1"}
+checks_init3 = {"method_mode":"XR","coarse":True,"file_type": "Time","epoch_start": False}
 
 xr_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 xrf_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
@@ -91,11 +112,25 @@ pseudo_init= {"alpha":0.0728, "num_point": 2, "exp_time": 30, "x2_per_step": 0, 
 # this version has two variables for the x2 position, one could be removed
 samples = []
 samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init1]))
+samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
 samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init2]))
+samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
+samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init3]))
+samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
 
-# samples.append(Sample("sample_1", x2_pos1,[ "soller",soller_init]))
+
+
+
+# samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init3]))
+# samples.append(Sample("zample_1", x2_pos1,[ "soller",soller_init]))
 # samples.append(Sample("sample_1", x2_pos1,[ "xr",xr_init]))
-# samples.append(Sample("sample_1", x2_pos1,[ "xrf",xrf_init]))
+
+
+
+
+
+# samples.append(Sample("sample_1", x2_pos1,[ "xr",xr_init]))
+# samples.append(Sample("sample_1", x2_pos1,[ "xrf",xrf_init]))def get_na
 # samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
 # samples.append(Sample("sample_n", x2_pos2,[ "giwaxs",giwaxs_init]))
 # samples.append(Sample("sample_bg",x2_pos3,[ "giwaxs_bkg",giwaxs_bkg_init]))
@@ -103,7 +138,7 @@ samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init2]))
 
 # This is the routine that checks to make sure that the same is allowed
 allowed_list=['xr','xrf','gisaxs','giwaxs','giwaxs_bkg','soller','pseudo', 'checks']
-def check_samples():
+def check_commands():
     set_allowed=1
     all_list = list(range(len(samples)))
     for ii in all_list:
@@ -112,10 +147,11 @@ def check_samples():
         if allowed_list.count(method.lower()) == 1:
             print(method,"is an allowed method:", samples[ii].name,samples[ii].measure)
         if allowed_list.count(method) == 0 : 
-            print(method,"\033[91mis not an allowed metho:\033[0m",samples[item].namemples[ii].name,samples[ii].measure)
+            print(method,"is NOT an allowed method:", samples[ii].name,samples[ii].measure)
             set_allowed=0
     return(set_allowed)
 
+Epoch_start=time.time()
 
 # This is where the type of scans are defined.
 # Below is the case where all of the scans are the same and from a scan file
@@ -189,34 +225,72 @@ def pseudo(item,index,x2_pos):
     print("Starting PSEUDO scan with file- ",name, "  at x2=",x2_pos)
     yield from gixos_multiqxy(file_name_dict[number]+'_pxr', alpha = 0.0728, num_point = 1, exp_time = 30, x2_per_step = 0, atten=-1.5, slit='slit_x2')
 
+def kibron(item,index,pressure):
+    print("Simulation mode: checking accuracy of kibron variables")
+    kibron.runConstantPressure(target_pressure=pressure, target_speed = 70)
+    print('Compression is finishied; stop the Kibron')
+    # do we add a sleep here, how much
+    kibron.device.call('StepStop')
+    kibron.device.call('StopMeasure')
+    # do we need to add the following
 
+
+def kibron_stop_measure():
+    kibron.device.call("StopMeasure")
+
+################### TO USE KIBRON ####################
+# To start, run these commands in the bluesky finescanbelow
+    # HOST, PORT = "10.66.91.26", 9897 ## HZ
+    # sock = mtx.connect(HOST, PORT)
+    # device = mtx.Trough(sock)
+    # kibron = KibronTrough(device, sock)
+# To stop the measurement:
+    # kibron.device.call('StepStop')
+    # kibron.device.call('StopMeasure')
+
+#     # kibron_stop_measure()
+# def kibron_stop_measure():
+    # kibron.device.call('StepStop')
+    # kibron.device.call('StopMeasure')
+# To stop the remote server:
+    # kibron.close()
+##################################################
+#TODO remove file_type below
 # THis allows you to configure a line with sample checks
-def checks(item,index,x2_pos,method_mode="XR",phi=True, ih=True, tth=True, astth=True, coarse=True, **kwargs):
+def check_all(item,index,x2_pos,method_mode="XR",phi=True, ih=True, tth=True, astth=True,
+            coarse=True, file_type="none", epoch_start=False,**kwargs):
+    global File_type, Epoch_start
+    File_type=file_type
+    if epoch_start == True:
+        Epoch_start=time.time() #starts the clock for the time to be used in the file name
     pprint.pprint(kwargs)
-    #print(f"checks({', '.join(f'{k}={v}' for k, v in kwargs.items())})")
+    File_type=file_type
+    #print(f"check_all({', '.join(f'{k}={v}' for k, v in kwargs.items())})")
+
     yield from set_mode(method_mode)
     print("Checking the alignment at x2=",x2_pos, " using mode: ",method_mode)
     if phi    == True:
         print("running phi check")
-      #  check_phi()
+        #  check_phi()
     if ih     == True:
         print("running ih check")
-       #check_ih()
+        #check_ih()
     if tth    == True:
         print("running tth check")
-        #check_tth()
+            #check_tth()
     if astth  == True:
         print("running astth check")
-       # check_astth()
     # yield from slitX2_out() # what if we are not using x2
     # yield from bps.mv(geo.stblx2,samp_x2_start)
     if coarse == True:
         print("running coarse sample height check")
-      #  check_coarse()
+    #  check_coarse()
+    return()
 
 # Pre scans
 def xr_pre(samp_x2_start):
     print('XRR prescans')
+    yield from set_mode('xr')
     yield from bps.mv(geo.stblx2,samp_x2_start)
     yield from bps.sleep(10)
     yield from slitX2_out()
@@ -249,15 +323,36 @@ def soller_pre(samp_x2_start):
     yield from sample_height_set_fine()   #scan the detector arm height from -0.2 to 0.2 with 21 points
 
 def gisaxs_pre(samp_x2_start):
+
+
+    def saxs_on():
+
+        # '''For Pilatus1m
+        # SAXSY1: 15
+        # SAXSY2: 25
+        # det2_off(SAXS): -10.8
+        # det x = -0.7
+        # det y = 0
+        # bs_x: -15.82
+        # bs_y: 25
+
+        det_saxs_x = -0.7
+        det_saxs_y = 0
+        fp_saxs_y1 = 15
+        fp_saxs_y2 = 35
+        yield from bps.mv(fp_saxs.y1,fp_saxs_y1,fp_saxs.y2,fp_saxs_y2)
+        yield from bps.mv(detsaxs.x, det_saxs_x)
+        yield from bps.mv(detsaxs.y, det_saxs_y)
+
+    yield from saxs_on()
+
     print('GISAXS prescans')
     yield from set_mode('GISAXS')
     yield from bps.mv(geo.stblx2,samp_x2_start)
-    yield from bps.sleep(10)
     yield from slitX2_out()
- #   yield from bps.mv(geo.stblx2,samp_x2_start+8.5*x2_direction)  #move the  Sample Table X2 to xpos
     yield from det_set_exposure([detector], exposure_time=1, exposure_number = 1)
-    yield from sample_height_set_fine()   #scan the detector
-    x2_nominal= geo.stblx2.position
+    yield from sample_height_set_fine()   
+
 
 def giwaxs_pre(samp_x2_start):
     print('GIWAXS prescans')
@@ -325,15 +420,41 @@ def pseudo_post():
     print('Pseudo/GIOXS is done')  
 
 
-#file naming, could be extended to add pressure or run number
-def get_name(name,index,type):
-    return(name+'_'+index+'_'+str(type))
+# #file naming, could be extended to add pressure or run number
+# def get_name(name,index,type):
+#     return(name+'_'+index+'_'+str(type))
+
+# File_types
+# None, Sensor1, Sensor2, Kibron, Time
+
+def get_name(name,xr_method,index):
+
+    global File_type
+    print("file type ",File_type)
+
+    ## using f-string
+    # if File_type == "Kibron": 
+    #     naming = f'{name}_P{Kibron:.0f}_{xr_method}_{index}'
+    #     return naming
+    
+    if File_type == "Sensor1": 
+        return(name+"_P"+str(int(Sensor1))+"_"+xr_method+"_"+str(index))
+    if File_type == "Sensor2":
+        return(name+"_P"+str(int(Sensor2))+"_"+xr_method+"_"+str(index))
+    if File_type == "Kibron":
+        return(name+"_P"+str(int(KibronP))+"_"+xr_method+"_"+str(index))
+    if File_type == "Time":
+        minutes = str(int((time.time()-start_time)/60))
+        return(name+"_T"+str(int(minutes))+"_"+xr_method+"_"+str(index))
+    else:
+        return(name+"_"+str(xr_method)+"_"+str(index))
+
 
 # we probably need a kibron mode where we add the pressure to the name This was sometimes used in the old code
 #samp_name_new = samp_name+f'_P{one_pressure}'samples[item].name
 
 def run():
-    if check_samples() ==0:
+    if check_commands() ==0:
         print("\a\a\a")
         print("\033[91mERROR: WILL NOT TAKE DATA\033[0m")
         print("\a\a\a")
@@ -349,11 +470,13 @@ def run():
         other=samples[item].other
         method=samples[item].measure[0]
         print(f'\n\nCurrrently measuring {sample_name} with {method}')
+
     # method is the method number for each sample
 
         if method =="checks":
             extras=samples[item].measure[1]
-            yield from checks(item,0,other,**extras)
+            counter  -=1 # we do not want to increment the count if it is running check_all
+            yield from check_all(item,0,other,**extras)
 
         if method == "pseudo":
              n_psuedo =counter
@@ -397,11 +520,14 @@ def run():
             yield from giwaxs_bkg(item,n_giwaxs,other)
          #   yield from giwaxs_post
 
-        if method == "pressure":
-            print("running pressure with ",other)
+        if method == "kibron":
+            print("running pressure with ",other) # In this case other is the pressure and not the x2 position
+            PRESSURE=other
+            yield from giwaxs_bkg(item,counter,other)s
 
         if method == "wait":
             print("running wait with ", other)
+            yield from bps.sleep(0)
 
     # yield from det_set_exposure([quadem, lambda_det, pilatus100kA ], exposure_time=1, exposure_number = 1)
     # yield from bps.mv(geo.stblx2,-55)  #move the  Sample Table X2 to the center

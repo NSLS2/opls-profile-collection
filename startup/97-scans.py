@@ -74,12 +74,13 @@ def xr_scan_file(file_name,xpos, scan_file, start=None, end=None, scan_dir="None
         scan_p['atten'] = ['auto' for _ in range(len(scan_p['atten']))]
   
     pprint.pprint(scan_p,sort_dicts=False)
+    
     yield from bps.mv(geo.det_mode,1)
+
     # yield from reflection_scan_full(scan_param=scan_p,
     #     md={'file_name': sample_name},
     #     detector=lambda_det, 
     #     tilt_stage=False)
-    return
 
 # scan_p=xr_scan_file("test","xr_scans1.csv","all",3,"global")
 # pprint.pprint(scan_p)
@@ -196,6 +197,62 @@ def soller_scanq(file_name, xpos=None, block_pos = None, q_start=None ,q_end=Non
 
 #def gisaxs_scan(file_name, x2_direction=None, atten = 0, exposure_time=1, incident_angle = 0.0728,bs_pos = -15.82, **kwargs) :#
 #gisaxs_init = {"x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
+
+
+def gisaxs_scan_stitch(file_name,  
+                       x2_direction=1, 
+                       atten = 0, 
+                       exposure_time=1, 
+                       incident_angle = 0.0728, 
+                       bs_pos = -15.82, 
+                       wait_time = 10,
+                       tiling = 'ygaps',
+                       **kwargs):
+    
+    yield from set_mode("GISAXS")
+
+    if tiling == 'ygaps':
+        det_saxs_y_list         = [0, 0]
+        det_saxs_y_offset_list  = [0, 1]
+        stth_list               = [0, 0]
+        exp_time_list           = [exposure_time, exposure_time]
+        x2_offset_list          = [0*x2_direction, 0*x2_direction]
+        atten_2_list            = [atten for _ in range(len(det_saxs_y_list))]
+        wait_time_list          = [wait_time for _ in range(len(det_saxs_y_list))]
+        beam_stop_x             = [bs_pos for _ in range(len(det_saxs_y_list))]
+        beam_stop_y             = [25, 25] # low the bs to have low qxy signal
+
+    else:
+        # only run one shot
+        pass
+
+    
+
+    # '''For Pilatus1m
+    # SAXSY1: 
+    # SAXSY2: 25
+    # det2_off(SAXS): -10.8
+    # det x = -0.7
+    # det y = 0
+    # bs_x: -15.82
+    # bs_y: 25
+
+    
+    # '''
+   # det_saxs_x = -0.7
+
+    scan_dict={"det_saxs_y":det_saxs_y_list,
+        "det_saxs_y_offset":det_saxs_y_offset_list,
+        "stth":stth_list,
+        "exp_time":exp_time_list,
+        "x2_offset":x2_offset_list,
+        "atten_2":atten_2_list,
+        "wait_time":wait_time_list,
+        "beam_stop_x":beam_stop_x,
+        "beam_stop_y":beam_stop_y,}
+    
+    pprint.pprint(scan_dict,sort_dicts=False)
+
 
 def gisaxs_scan(file_name,  x2_direction=1, atten = 0, exposure_time=1, incident_angle = 0.0728, bs_pos = -15.82, **kwargs):
     yield from set_mode("GISAXS")
