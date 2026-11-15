@@ -83,7 +83,7 @@ class Sample():
         self.method =method
         self.counter = counter
         self.name_type = name_type
-        self.name_type = sh
+        self.sh = sh
         self.measure =measure
 
 x2_pos1 =-60
@@ -107,9 +107,12 @@ pseudo_init= {"alpha":0.0728, "num_point": 2, "exp_time": 30, "x2_per_step": 0, 
 
 counter=33
 sample1 =Sample("name1",17,"xr", counter, "Kibron",15,xr_init)
-sample2 =Sample("name2",17,"xrf",counter, "Time",15,xr_init)
+sample2 =Sample("name2",17,"checks",counter, "Time",15,checks_init3)
+sample3 =Sample("name2",17,"xrf",counter, "Time",15,xr_init)
 
-samples=[sample1,sample2]
+
+
+samples=[sample1,sample2,sample3]
 # all this is called samples, it is really a technique run and may or may not canple the sample and sample position
 # this version has two variables for the x2 position, one could be removed
 
@@ -245,7 +248,7 @@ def kibron_stop_measure():
 ##################################################
 #TODO remove file_type below
 # THis allows you to configure a line with sample checks
-def check_all(item,index,x2_pos,method_mode="XR",phi=True, ih=True, tth=True, astth=True,
+def check_all(item,method_mode="XR",phi=True, ih=True, tth=True, astth=True,
             coarse=True, file_type="none", epoch_start=False,**kwargs):
     global Epoch_start
     method=samples[item].method
@@ -423,15 +426,16 @@ def get_name(index):
     method=samples[index].method
     pos=samples[index].pos
     name_type=samples[index].name_type
+    print("name type=",name_type)
 
     val=5
     other=""
     if name_type == "Kibron":
-        other =f"p{val: .0f}_"
+        other =f"p{val:.0f}_"
     if name_type == "Sensor1_":
-        other =f"p{val: .0f}_"
+        other =f"p{val:.0f}_"
     if name_type == "Sensor2":
-        other =f"p{val: .0f}_"
+        other =f"p{val:.0f}_"
     if name_type == "Time":
         other = f"t{str(int((time.time()-start_time)/60))}_"
     naming = f'{name}_{method}_x{pos:.0f}_{other}{index}'
@@ -474,7 +478,6 @@ def run():
         sample_name=samples[item].name
         pos=samples[item].pos
         method=samples[item].method
-        print(method)
         print(f'\n\nCurrrently measuring {sample_name} with {method}')
 
     # method is the method number for each sample

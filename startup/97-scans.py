@@ -91,7 +91,6 @@ def xr_scan_file(file_name,xpos, scan_file, start=None, end=None, scan_dir="None
 
 
 def xrf_scan_file(file_name, xpos, scan_file, start=None, end=None, scan_dir=None, auto_atten=False,**kwargs):
-    print("in xrf")
     yield from set_mode("XRF")
 
     if start == "all":
