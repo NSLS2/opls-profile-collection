@@ -38,7 +38,7 @@ def trans2(name,tmp):
 
 #xr_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 
-def xr_scan_file(file_name,xpos, scan_file, start=None, end=None, scan_dir="None", auto_atten=False,**kwargs):
+def xr_scan_file(file_name,xpos, scan_file, method= "XR", start=None, end=None, scan_dir="None", auto_atten=False,**kwargs):
     yield from set_mode("XR")
 
     if start == "all":
@@ -90,7 +90,7 @@ def xr_scan_file(file_name,xpos, scan_file, start=None, end=None, scan_dir="None
 
 
 
-def xrf_scan_file(file_name, xpos, scan_file, start=None, end=None, scan_dir=None, auto_atten=False,**kwargs):
+def xrf_scan_file(file_name, xpos, scan_file, method= "XRF", start=None, end=None, scan_dir=None, auto_atten=False,**kwargs):
     yield from set_mode("XRF")
 
     if start == "all":
@@ -135,7 +135,7 @@ def xrf_scan_file(file_name, xpos, scan_file, start=None, end=None, scan_dir=Non
     return
 
 
-def soller_scanq(file_name, xpos=None, block_pos = None, q_start=None ,q_end=None, npts=None, exp_time=None, x2_direction=None, wait_time=None, alpha_i=0.0728, atten=-1.775, **kwargs): 
+def soller_scanq(file_name, xpos=None, block_pos = None, method="Soller",q_start=None ,q_end=None, npts=None, exp_time=None, x2_direction=None, wait_time=None, alpha_i=0.0728, atten=-1.775, **kwargs): 
     yield from set_mode("Soller")
     print("starting xrf_scan_file,  sample name =",file_name)
     th_start= (180/np.pi)*np.asin(q_start*geo.wlength/4/np.pi)*2
@@ -199,6 +199,7 @@ def soller_scanq(file_name, xpos=None, block_pos = None, q_start=None ,q_end=Non
 
 
 def gisaxs_scan_stitch(file_name,  
+                       method="Soller",
                        x2_direction=1, 
                        atten = 0, 
                        exposure_time=1, 
@@ -253,7 +254,7 @@ def gisaxs_scan_stitch(file_name,
     pprint.pprint(scan_dict,sort_dicts=False)
 
 
-def gisaxs_scan(file_name,  x2_direction=1, atten = 0, exposure_time=1, incident_angle = 0.0728, bs_pos = -15.82, **kwargs):
+def gisaxs_scan(file_name,  method="GISAXS",x2_direction=1, atten = 0, exposure_time=1, incident_angle = 0.0728, bs_pos = -15.82, **kwargs):
     yield from set_mode("GISAXS")
 
     # '''For Pilatus1m
@@ -317,7 +318,7 @@ def gisaxs_scan(file_name,  x2_direction=1, atten = 0, exposure_time=1, incident
     return
 
 
-def giwaxs_scan(file_name, incident_angle = 0.0728, atten = 6, exposure_time=1, tth=0,  x2_direction=1, block_pos = 60, use_slitx2 = False, sh_offset = -1,**kwargs):
+def giwaxs_scan(file_name, method="GIWAXS", incident_angle = 0.0728, atten = 6, exposure_time=1, tth=0,  x2_direction=1, block_pos = 60, use_slitx2 = False, sh_offset = -1,**kwargs):
     yield from set_mode("GIWAXS")
 
 
@@ -371,7 +372,7 @@ def giwaxs_scan(file_name, incident_angle = 0.0728, atten = 6, exposure_time=1, 
 
 
 # def giwaxs_scan_bkg(file_name, incident_angle = 0.0728, x2_direction=1, block_pos = 60, atten = atten_slit, exposure_time=1, tth=0, use_slitx2 = True, slit_x2_offset_block=43.955, sh_offset = -1):
-def giwaxs_scan_bkg(file_name, incident_angle = 0.0728, block_pos = 60, atten = 6, exposure_time=1, tth=0, use_slitx2 = False, sh_offset = -1,**kwargs):
+def giwaxs_scan_bkg(file_name, method="GISWAXS", incident_angle = 0.0728, block_pos = 60, atten = 6, exposure_time=1, tth=0, use_slitx2 = False, sh_offset = -1,**kwargs):
     yield from set_mode("GIWAXS")
 
 
@@ -429,7 +430,7 @@ def giwaxs_scan_bkg(file_name, incident_angle = 0.0728, block_pos = 60, atten = 
 
 
     
-def gixos_transverse_sth(name, bkg_name, qxy_list = [0.04], alpha = 0.0728, atten = -1.775, 
+def gixos_transverse_sth(name, bkg_name, method = "pseudo", qxy_list = [0.04], alpha = 0.0728, atten = -1.775, 
                          sh_offset_pos = 0, x2_per_step =0, exp_time = 30, 
                          num_point =1, soller_tran = -1,
                          final_sthreturn=True, final_blockreturn=True):

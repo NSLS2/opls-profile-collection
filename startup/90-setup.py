@@ -97,29 +97,29 @@ def liquids_mode():
         return("BAD")
     
 
-def set_mode(mode):
+def set_mode(mode.lower()):
 
-    if mode == "Alignment":
+    if mode == "alignment":
         yield from bps.mv(geo.det_mode,1)
         yield from bps.mv(geo.track_mode,0)
 
-    elif mode == "XR":
+    elif mode == "xr":
         yield from bps.mv(geo.det_mode,1)
         yield from bps.mv(geo.track_mode,1)
     
-    elif mode == "Soller":
+    elif mode == "soller":
         yield from bps.mv(geo.det_mode,5)
         yield from bps.mv(geo.track_mode,2)
     
-    elif mode == "GIWAXS":
+    elif mode == "giwaxs":
         yield from bps.mv(geo.det_mode,3)
         # yield from bps.mv(geo.track_mode,1)
 
-    elif mode == "GISAXS":
+    elif mode == "gisaxs":
         yield from bps.mv(geo.det_mode,2)
         # yield from bps.mv(geo.track_mode,1)
     
-    elif mode == "XRF":
+    elif mode == "xrf":
         yield from bps.mv(geo.det_mode,4)
         # yield from bps.mv(geo.track_mode,1)
     else:
