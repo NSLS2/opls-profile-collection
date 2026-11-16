@@ -38,18 +38,19 @@ def trans2(name,tmp):
 
 #xr_init={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 
-def xr_scan_file(file_name,xpos, scan_file, method= "XR", start=None, end=None, scan_dir="None", auto_atten=False,**kwargs):
+def xr_scan_file(file_name, method= "XR", scan_file="xr.scan1.csv", start=None, end=None,
+                  scan_dir="global", auto_atten=False,**kwargs):
     yield from set_mode("XR")
 
     if start == "all":
         start=0
         end=99
     if scan_dir=="global":
-        print("global directory")
+        print("Reading", scan_file, "from the global directory")
         directory='/home/xf12id1/.ipython/profile_collection/startup/scans/'
 
     else:
-        print("local directory")
+        print("Reading", scan_file, "from the local directory")
  #       user="ocko"
  #       user="tobias_cornell"
         directory="/home/xf12id1/.ipython/profile_collection/startup/users/"+scan_dir+"/scans/"
@@ -82,15 +83,10 @@ def xr_scan_file(file_name,xpos, scan_file, method= "XR", start=None, end=None, 
     #     detector=lambda_det, 
     #     tilt_stage=False)
 
-# scan_p=xr_scan_file("test","xr_scans1.csv","all",3,"global")
-# pprint.pprint(scan_p)
-
-#
-#def xrf_scan_file(sample_name,xpos, scan_name,start,end,scan_dir="global", auto_atten=False): 
 
 
 
-def xrf_scan_file(file_name, xpos, scan_file, method= "XRF", start=None, end=None, scan_dir=None, auto_atten=False,**kwargs):
+def xrf_scan_file(file_name, scan_file="xrf.scan1.csv", method= "XRF", start=None, end=None, scan_dir=None, auto_atten=False,**kwargs):
     yield from set_mode("XRF")
 
     if start == "all":

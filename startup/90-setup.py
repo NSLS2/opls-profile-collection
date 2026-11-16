@@ -115,6 +115,10 @@ def set_mode(mode.lower()):
         yield from bps.mv(geo.det_mode,3)
         # yield from bps.mv(geo.track_mode,1)
 
+    elif mode == "giwaxs_bkg":
+        yield from bps.mv(geo.det_mode,3)
+        # yield from bps.mv(geo.track_mode,1)
+
     elif mode == "gisaxs":
         yield from bps.mv(geo.det_mode,2)
         # yield from bps.mv(geo.track_mode,1)

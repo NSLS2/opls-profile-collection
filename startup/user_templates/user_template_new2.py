@@ -97,8 +97,8 @@ checks_init3 = {"method":"XR","det_mode":"XR","coarse":True,"file_type": "Time",
 checks_init4 = {"method":"checks","det_mode":"XR","coarse":True,"file_type": "none","epoch_start": False}
 
 
-xr_init={"method":"XR","start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
-xrf_init={"method":"XRF","start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
+xr_init={"method":"XR","scan_file": "xr_scan1.csv", "start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
+xrf_init={"method":"XRF","scan_file":"xrf_scan1.csv", "start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 soller_init ={"method":"Soller","x2_direction":1,"block_pos": 0,"q_start":1.3,"q_end":1.8,"npts":21,"exp_time":20, "alpha_i":0.0728, "wait_time":5,"atten":-1.775}
 gisaxs_init = {"method":"gisaxs","x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
 giwaxs_init = {"method":"giwaxs","incident_angle": 0.0728, "atten": 0, "exposure_time": 1.7, "tth": 0, "x2_direction":17 , "block_pos": 60, "use_slitx2": True, "sh_offset": -1}
@@ -114,6 +114,7 @@ run1 = (sample1, xr_init)
 run2 = (sample2, checks_init4)
 run3  = (sample3, xrf_init)
 runs= [run1, run2, run3]
+runs=[run1]
 
 
 # all this is called samples, it is really a technique run and may or may not canple the sample and sample position
@@ -157,7 +158,7 @@ def xr(item):
     x2_pos=runs[item][0].pos
     extras=runs[item][1]
     print("Starting XR scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
-    yield from xr_scan_file(file_name,x2_pos, "xr_scan1.csv", **extras)
+    yield from xr_scan_file(file_name,**extras)
 
 # This is where the type of XRF scans are defined. The same as xr() except the name        
 # Below is the case where all of the scans are the same and from a scan file
@@ -169,7 +170,7 @@ def xrf(item):
     x2_pos=runs[item][0].pos
     extras=runs[item][1]
     print("Starting XRF scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
-    yield from xrf_scan_file(file_name,x2_pos,"xrf_scan1.csv", **extras)
+    yield from xrf_scan_file(file_name, **extras)
 
 # This is where the type of Soller scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
