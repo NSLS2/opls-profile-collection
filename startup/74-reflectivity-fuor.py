@@ -49,7 +49,7 @@ def reflection_fluorescence_scan_full(scan_param, md=None, detector=xs, tilt_sta
     
     for i in range(N):
         print('%sst set starting'%i)
-        yield from bps.sleep(3) 
+   #     yield from bps.sleep(3) 
         print(scan_param)
         xs.settings.num_images.value=1
         print("number of frame is 1")
@@ -101,7 +101,7 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
             #print('regular')
             yield from mabt(alpha, alpha, 0)
 ### this is a quick patch for loss the incident angle. 2024/11/22
-            yield from bps.sleep(5)
+  #          yield from bps.sleep(5)
             if abs(geo.ia.user_setpoint.value-alpha)>0.001:
                 print(f'Target ia {alpha}, current ia {geo.ia.user_setpoint.value}.')
                 yield from bps.mv(geo.ia, alpha)
@@ -140,6 +140,8 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
       
         yield from bps.mv(S2.vg,s2_vg)
         yield from bps.mv(geo.stblx2,x2_nominal+x2_fraction)
+        yield from bps.sleep(wait_time)
+
         # yield from bps.mv(abs2, atten_2)
         # yield from bps.sleep(wait_time)
         # yield from bps.mv(attenuation_factor_signal, att_bar1['attenuator_aborp'][atten_2])
@@ -165,7 +167,7 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
 
         for _ in range(number_loop):
             yield from bps.mv(shutter, 1)
-            yield from bps.sleep(0.5)
+            yield from bps.sleep(0.2)
 
             # quadem.averaging_time.put(precount_time)
             # yield from bps.trigger_and_read([quadem], name='precount')
@@ -186,6 +188,6 @@ def reflection_fluorescence_scan(scan_param, i, detector='xs', md={}, tilt_stage
                                             [exposure_time_signal],
                                             name='primary')
             yield from bps.mv(shutter, 0)
-            yield from bps.sleep(0.5) # add 0.2s sleep before open it in the next run
+            yield from bps.sleep(0.2) # add 0.2s sleep before open it in the next run
             
 

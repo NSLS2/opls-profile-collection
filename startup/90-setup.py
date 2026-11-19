@@ -97,7 +97,9 @@ def liquids_mode():
         return("BAD")
     
 
-def set_mode(mode.lower()):
+def set_mode(mode):
+
+    mode = mode.lower()
 
     if mode == "alignment":
         yield from bps.mv(geo.det_mode,1)

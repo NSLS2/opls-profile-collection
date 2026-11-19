@@ -63,6 +63,10 @@ def set_tth(new_value):
 def set_S2_hc(new_value):
     yield Msg('reset_user_position', S2.hc, new_value)
     save_offsets()
+
+def set_tth(new_value):
+    yield Msg('reset_user_position', geo.tth, new_value)
+    save_offsets()
      
 #def set_th(new_value):
 #    yield Msg('reset_user_position', geo.th, new_value)

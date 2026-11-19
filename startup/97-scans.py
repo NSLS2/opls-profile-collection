@@ -54,8 +54,11 @@ def xr_scan_file(file_name, method= "XR", scan_file="xr.scan1.csv", start=None, 
  #       user="ocko"
  #       user="tobias_cornell"
         directory="/home/xf12id1/.ipython/profile_collection/startup/users/"+scan_dir+"/scans/"
+  #      directory="/home/xf12id1/.ipython/profile_collection/startup/users/singh/scans/"
+
     
     tmp=pd.read_csv(directory+scan_file,skiprows=0, sep='\s+')
+    print("print tmp",tmp)
 
     scan_p={
     "start":trans1('alpha_start',tmp)[start:end],
@@ -64,7 +67,7 @@ def xr_scan_file(file_name, method= "XR", scan_file="xr.scan1.csv", start=None, 
     "atten":trans2('auto_atten',tmp)[start:end],
     "s2vg":trans1('s2_vg',tmp)[start:end],
     "exp_time":trans1('exp_time',tmp)[start:end],
-    "pre_time":trans1('precount_time',tmp)[start:end],
+    "pre_time":trans1('pre_time',tmp)[start:end],
     "wait_time":trans1('wait_time',tmp)[start:end],
     "x2_offset_start":trans1('x2_offset_start',tmp)[start:end],
     "x2_offset_stop":trans1('x2_offset_stop',tmp)[start:end],
@@ -78,10 +81,10 @@ def xr_scan_file(file_name, method= "XR", scan_file="xr.scan1.csv", start=None, 
     
     yield from bps.mv(geo.det_mode,1)
 
-    # yield from reflection_scan_full(scan_param=scan_p,
-    #     md={'file_name': sample_name},
-    #     detector=lambda_det, 
-    #     tilt_stage=False)
+    yield from reflection_scan_full(scan_param=scan_p,
+        md={'file_name': file_name},
+        detector=lambda_det, 
+        tilt_stage=False)
 
 
 
@@ -109,6 +112,7 @@ def xrf_scan_file(file_name, scan_file="xrf.scan1.csv", method= "XRF", start=Non
     "stop":trans1('alpha_stop',tmp)[start:end],
     "n":trans2('number_points',tmp)[start:end],
     "atten":trans2('auto_atten',tmp)[start:end],
+    "pre_time":trans1('pre_time',tmp)[start:end],
     "s2vg":trans1('s2_vg',tmp)[start:end],
     "exp_time":trans1('exp_time',tmp)[start:end],
     "wait_time":trans1('wait_time',tmp)[start:end],
@@ -116,19 +120,28 @@ def xrf_scan_file(file_name, scan_file="xrf.scan1.csv", method= "XRF", start=Non
     "x2_offset_stop":trans1('x2_offset_stop',tmp)[start:end],
     }
 
-    if auto_atten:
-        scan_p['atten'] = auto_atten
     
     pprint.pprint(scan_p,sort_dicts=False)
-
-#     yield from bps.mv(geo.det_mode,1)
-#    yield from bps.mv(abs3,1)
-#     yield from reflection_fluorescence_scan_full(scan_param=scan_p,
-#         md={'file_name': name},
-#         detector=xs, 
-#         tilt_stage=False,)
-#     # yield from bps.mv(abs3,0)
+    print("file name =", file_name)
+    yield from bps.mv(geo.det_mode,1)
+    yield from reflection_fluorescence_scan_full(scan_param=scan_p,
+        md={'sample_name': file_name},
+        detector=xs, 
+        tilt_stage=False,)
+    # yield from bps.mv(abs3,0)
     return
+
+
+
+    print(scan_p)
+    yield from bps.mv(geo.det_mode,1)
+  #  yield from bps.mv(abs3,1)
+    yield from reflection_fluorescence_scan_full(scan_param=scan_p,
+        md={'sample_name': file_name},
+        detector=xs, 
+        tilt_stage=False,)
+    # yield from bps.mv(abs3,0)
+
 
 
 def soller_scanq(file_name, xpos=None, block_pos = None, method="Soller",q_start=None ,q_end=None, npts=None, exp_time=None, x2_direction=None, wait_time=None, alpha_i=0.0728, atten=-1.775, **kwargs): 
@@ -162,30 +175,30 @@ def soller_scanq(file_name, xpos=None, block_pos = None, method="Soller",q_start
 
 
 
-    # yield from bps.mov(block.y,block_pos)
-    # yield from bps.mv(soller.tran,-6)
-    # yield from bps.mv(soller.tran,5.5)
-#     x2_position_original = x2.position
-#     yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
+    yield from bps.mov(block.y,block_pos)
+    yield from bps.mv(soller.tran,-6)
+    yield from bps.mv(soller.tran,5.5)
+    x2_position_original = x2.position
+    yield from bps.mov(slit_x2,slit_x2_offset_block-x2_position_original)
 
-# #mode 5 is for GID with soller
-#     yield from bps.mv(geo.det_mode,5)
-#     yield from bps.mv(geo.track_mode,2)
-#     # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# with extension for gisaxs flight path
-#     yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without extension
-#     print("calling GID_soller")
-#     yield from gid_scan_soller(scan_dict,
-#                                 md={'file_name': name}, 
-#                                 detector = pilatus100kA,
-#                                 alphai = alpha_i,
-#                                 beamstop = None,
-#                                 )
+#mode 5 is for GID with soller
+    yield from bps.mv(geo.det_mode,5)
+    yield from bps.mv(geo.track_mode,2)
+    # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# with extension for gisaxs flight path
+    yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without extension
+    print("calling GID_soller")
+    yield from gid_scan_soller(scan_dict,
+                                md={'file_name': name}, 
+                                detector = pilatus100kA,
+                                alphai = alpha_i,
+                                beamstop = None,
+                                )
     
-#     yield from bps.mv(abs2,5)
-#     # yield from bps.mv(geo.det_mode,1)
-#     # yield from bps.mv(geo.track_mode,1)
-#     # yield from bps.mov(block.y,60)
-#     yield from slitX2_out()
+    yield from bps.mv(abs2,5)
+    # yield from bps.mv(geo.det_mode,1)
+    # yield from bps.mv(geo.track_mode,1)
+    # yield from bps.mov(block.y,60)
+    yield from slitX2_out()
 
     return
 
@@ -478,6 +491,18 @@ def gixos_transverse_nochamber(name, qxy_list = [0.04], alpha = 0.0728, atten = 
  #                  atten = -1.5, soller_tran=-1.5, slit='slit_x2'):
 
 def gixos_multiqxy(name, **kwargs):
+    print(kwargs)
+    slit=kwargs["slit"]
+    alpha=kwargs["alpha"]
+    atten=kwargs["atten"]
+    exp_time=kwargs["exp_time"]
+    num_point=kwargs["num_point"]
+    x2_per_step=kwargs["x2_per_step"]
+    soller_tran=kwargs["soller_tran"]
+
+
+
+
     '''
     slit: select the slits to be used in the PXR, HZ 2026-03-13
     1) 'slit_x2': using the slit_x2 insde the chamber
@@ -536,6 +561,131 @@ def gixos_multiqxy(name, **kwargs):
         yield from blocker_out()
     yield from bps.mov(abs2,5)
 
+
+def gixos_sth(name, qxy=0.04, exp_time = 30, num_point = 6, alpha = 0.0728, atten = 6, 
+              sh_offset = 0, soller_tran = -1, sthreturn = True, blockreturn = True):
+    '''
+    this GIXOS uses beam blocker at 0, and rotate sample azimuth (asth) to astth to set the angle
+    '''
+    astth_0 = 15.147 # 15.087 # astth at 0,0,0
+    ener = energy.energy.position # in eV 
+    wavelength = 12400 / ener 
+    angle_offset_rad = np.arcsin(qxy*wavelength/4/np.pi)*2
+    angle_offset_deg = np.rad2deg(angle_offset_rad)
+    #commented out since this line seems to be causing aborts
+
+    soller_tran_current = soller.tran.position
+    print('check the soller position')
+    if abs(soller_tran_current - soller_tran)>0.1:
+        # yield from bps.mv(soller.tran,soller_tran)
+        yield from move_motor_with_retries(soller.tran, soller_tran)
+
+
+    yield from bps.mv(S2.hg, 0.15)
+
+
+    # x2_position_original = x2.position
+    # print('move slit x2 in pre-determined position')
+    # yield from bps.mov(slit_x2,slit_x2_offset_gap-x2_position_original)
+    
+
+    print('angle offset: %.3f deg' % angle_offset_deg)
+    asth_angle = astth_0 + angle_offset_deg
+    print('mabt(%.4f, %.4f, %.3f)\nasth target: %.3f deg' % (alpha, alpha, angle_offset_deg, asth_angle))
+    yield from bps.mv(asth.rot,asth_angle)
+    yield from bps.sleep(5)
+
+    stth_start_list =    [angle_offset_deg]
+    stth_stop_list =     [angle_offset_deg+0.00001]
+    number_points_list = [num_point]
+    exp_time_list      = [exp_time]
+    x2_range_list      = [0]
+    atten_2_list       = [atten]
+    wait_time_list     = [3]
+    sh_offset_list     = [sh_offset]
+
+    scan_dict={
+        "start":stth_start_list, 
+        "stop":stth_stop_list,
+        "n":number_points_list,
+        "exp_time":exp_time_list,
+        "x2_range":x2_range_list,
+        "atten_2":atten_2_list,
+        "wait_time":wait_time_list,
+        "sh_offset": sh_offset_list,
+      }
+    
+    yield from set_mode('Soller')
+    print("calling GIXOS")
+    yield from gid_scan_soller(scan_dict,
+                                md={'sample_name': name}, 
+                                detector = pilatus100kA,
+                                alphai = alpha,
+                                beamstop = None,
+                                )
+    # yield from bps.mv(geo.track_mode,1)
+    # cchnaged from 5 to 2 to speed up
+    yield from bps.mv(abs2,2)
+    
+    if blockreturn:
+        yield from bps.mv(block.y, 60)
+        # yield from bps.mov(slit_x2,-9.5)
+        yield from slitX2_out()
+        print("in block return")
+        
+    if sthreturn:
+        yield from bps.mv(asth.rot, astth_0)
+    yield from bps.mv(S2.hg, 0.5)
+
+
+
+def gixos_transverse_sth(name, bkg_name, qxy_list = [0.04], alpha = 0.0728, atten = -1.775, 
+                         sh_offset_pos = 0, x2_per_step =0, exp_time = 30, 
+                         num_point =1, soller_tran = -1,
+                         final_sthreturn=True, final_blockreturn=True):
+    '''
+    alpha_c = 0.085 at E = 14.4keV,
+    85% alpha_c = 0.085*0.85
+    uses transverse sth
+    '''
+    for qxy_pos in qxy_list[:-1]:
+        print('inside for loop')
+        print('gixos qxy: %.3f /A' % qxy_pos)
+        yield from gixos_sth(name, qxy=qxy_pos, atten = atten, alpha = alpha, sh_offset = sh_offset_pos, 
+                             exp_time = exp_time, num_point = num_point, soller_tran = soller_tran,
+                             sthreturn = False, blockreturn = False)
+        print('gixos bkg qxy: %.3f /A' % qxy_pos)
+        yield from gixos_sth(bkg_name, qxy=qxy_pos, atten = atten, alpha = alpha, sh_offset = sh_offset_pos-1, 
+                             exp_time = exp_time, num_point = num_point, soller_tran = soller_tran,
+                             sthreturn = False, blockreturn = False)
+        if x2_per_step != 0:
+            yield from bps.mvr(x2, x2_per_step)
+    
+    print('Outside for loop')
+    print('gixos qxy: %.3f /A' % qxy_list[-1])
+    yield from gixos_sth(name, qxy=qxy_list[-1], atten = atten, alpha = alpha, sh_offset = sh_offset_pos, 
+                         exp_time = exp_time, num_point = num_point, soller_tran = soller_tran,
+                         sthreturn = False, blockreturn = False)
+    print('gixos bkg qxy: %.3f /A' % qxy_list[-1])
+    yield from gixos_sth(bkg_name, qxy=qxy_list[-1], atten = atten, alpha = alpha, sh_offset = sh_offset_pos-1, 
+                         exp_time = exp_time, num_point = num_point, soller_tran = soller_tran,
+                         sthreturn = final_sthreturn, blockreturn = final_blockreturn)
+ 
+    if x2_per_step != 0:
+        yield from bps.mvr(x2, x2_per_step)
+
+
+def gixos_transverse_nochamber(name, qxy_list = [0.04], alpha = 0.0728, atten = -1.775, sh_offset_pos = 0, 
+                               x2_per_step =0, exp_time = 30):
+    '''
+    alpha_c = 0.085 at E = 14.4keV,
+    85% alpha_c = 0.085*0.85
+    '''
+    for qxy_pos in qxy_list:
+        yield from gixos(name, qxy=qxy_pos, atten = atten, alpha = alpha, sh_offset = sh_offset_pos, exp_time = exp_time)
+        # yield from gixos(bkg_name, qxy=qxy_pos, atten = atten, alpha = alpha, sh_offset = sh_offset_pos-1, exp_time = exp_time)
+        if x2_per_step != 0:
+            yield from bps.mvr(x2, x2_per_step)
 
 
 def printSampleInfo(samp_name_dict,sam_x2_pos,xr_run_dict,xrf_run_dict,gid_run_dict,gisaxs_run_dict,pxr_run_dict):

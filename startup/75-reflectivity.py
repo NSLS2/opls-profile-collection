@@ -66,8 +66,7 @@ def reflection_scan_full(scan_param, md=None, detector=lambda_det, tilt_stage=Fa
         for i in range(N):
             # yield from bps.open_run(md=base_md)
             print('%sst set starting'%i)
-            yield from bps.sleep(3) 
-    #      print(scan_param)
+     #       yield from bps.sleep(3) 
             yield from reflection_scan(scan_param,i, detector=detector, md=md, tilt_stage=tilt_stage, auto_atten=auto_atten, usekibron = usekibron, trough = trough, compress = compress, target_pressure=target_pressure, x2_nominal=x2_nominal,blocky_nominal=blocky_nominal)                      
             print('%sst set done'%i)
             # yield from bps.close_run()
@@ -89,156 +88,6 @@ all_area_dets = [quadem, lambda_det, AD1, AD2, o2_per, chiller_T, lakeshore] # R
 # all_area_dets = [quadem, bpm, lambda_det, AD1, AD2, o2_per, chiller_T]
 # all_area_dets = [quadem, pilatus100k, AD1, AD2, o2_per, chiller_T, ls] # Backup XR mode using Pilatus100k
 
-
-@bpp.stage_decorator(all_area_dets)
-def reflection_scan_old(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,x2_nominal=0,blocky_nominal=0, usekibron = False, auto_atten = False, trough = None, compress = False, target_pressure=0):
-
-    alpha_start =   scan_param["start"][i]
-    alpha_stop =    scan_param["stop"][i]
-    number_points = scan_param["n"][i]
-    atten_2 =       scan_param["atten"][i]
-    s2_vg =         scan_param["s2vg"][i]
-    exp_time =      scan_param["exp_time"][i]
-    precount_time=  scan_param["pre_time"][i]
-    wait_time =     scan_param["wait_time"][i]
-    x2_offset_start =     scan_param["x2_offset_start"][i]
-    x2_offset_stop =     scan_param["x2_offset_stop"][i]
-    block_offset   =     scan_param["beam_block_offset"][i]
-
-
-
-# setting up so that if alpha is moved negative that there is an extra wait
-    alpha_old=5
-    print(alpha_start,"----",alpha_stop,atten_2)
-    for alpha in np.linspace(alpha_start, alpha_stop, number_points):
-        # Move to the good geometry position
-        if tilt_stage:
-             yield from nab(alpha, alpha)
-        else:
-            if alpha >= alpha_old:
-                yield from mabt(alpha, alpha, 0)
-
-                # if alpha-alpha_old < 0.05: ## added by HZ 2022-10-17 due to low geometry resolution
-                #     yield from mabt(alpha-0.1, alpha-0.1, 0)
-                #     yield from bps.sleep(1)
-                #     yield from mabt(alpha, alpha, 0)
-                # else:
-                #     yield from mabt(alpha, alpha, 0)
-
-            else:
-                yield from mabt(alpha-0.1, alpha-0.1, 0)
-                yield from bps.sleep(1)
-                yield from mabt(alpha, alpha, 0)
-            
-            ### this is a quick patch for loss the incident angle. 2024/11/22
-            yield from bps.sleep(5)
-            if abs(geo.ia.user_setpoint.value-alpha)>0.001:
-                print(f'Target ia {alpha}, current ia {geo.ia.user_setpoint.value}.')
-                yield from bps.mv(geo.ia, alpha)
-
-            if abs(geo.oa.user_setpoint.value-alpha)>0.001:
-                print(f'Target oa {alpha}, current ia {geo.oa.user_setpoint.value}.')
-                yield from bps.mv(geo.oa, alpha)
-
-        #yield from mabt(geo.alpha=0,geo.samchi=x,geo.beta=2*x)
-        fraction  = (alpha-alpha_start)/(alpha_stop-alpha_start)
-        x2_fraction =fraction*(x2_offset_stop-x2_offset_start) + x2_offset_start ## Need to add x2_offset_start (HZ)
-
-        yield from bps.mv(S2.vg,s2_vg)
-        if abs(x2_fraction)>0:
-            yield from bps.mv(geo.stblx2,x2_nominal+x2_fraction)
-            yield from bps.sleep(5) # Wait for vibration going away for Kibron troughs (HZ)
-        # yield from bps.mv(block.y,x2_nominal+x2_fraction+block_offset) # large trough
-        # yield from bps.mv(block.y,blocky_nominal+x2_fraction+block_offset) # small trough, multiple slits
-        if x2_offset_stop != x2_offset_start: 
-            yield from bps.sleep(2) # sleep every time after x2 move (HZ)
-        yield from bps.sleep(wait_time)    
-        # REMOVED FOR MOLTEN SALTS
-        #if alpha <= alpha_old:
-        #    yield from bps.sleep(10) 
-        #    print("wating an extra 10 sec")  
-        alpha_old =alpha
-
-
-        #Attenuator MODE
-        # Set the absorber time to the define exp_time for the measurement
-        # AUTO MODE FIGURES OUT THE APPROPIRAE ATTENUATOR BY DOING TESTS WITH HIGH ATTENUATOR NUMBERS
-        if atten_2 == "auto":
-            yield from calc_att_auto(alpha, precount_time=precount_time,detector=detector)
-        # CALC MODE FIGURES OUT THE APPROPIRAE ATTENUATOR USING A FORMULA
-        elif atten_2 == "calc":
-            att = calc_att_from_ai(alpha)
-            yield from bps.mv(abs2, atten_2)
-        # THE ATTENUATOR NUMBER IS GIVEN BUT THE OUTPUT ON THE ATTENUATO VALU IS INCORRECT
-        else:            
-            if isinstance(atten_2,int):
-                att=atten_2
-                yield from bps.mv(abs2, att)    
-        
-        # else:
-        #     print('The absorber should be auto, calc, or int. Here will use auto.')
-        #     yield from calc_att_auto(alphai, precount_time=1)
-        #set metadata
-        # IF NOT EQUAL TO AUTO SETTING THE META DATA, THIS CHOOSES THE att_bar data structure to use
-        #  THIS IS INCORRECT SINCE ATTENUATOR VALUES ARE NOT KNOWN.
-        
-        if atten_2 != "auto":
-            yield from bps.mv(attenuation_factor_signal, att_bar1['attenuator_aborp'][att])
-            yield from bps.mv(attenuator_name_signal, att_bar1['name'][att])
-
-    
-       ##### to use the new attenbank #### 
-        yield from bps.mv(abs2, atten_2)  
-        # print(f"attenuation is {atten_2}")
-        yield from bps.mv(attenuator_name_signal, f'att{atten_2}')
-        if att_fact_selected != None:
-            yield from bps.mv(attenuation_factor_signal, att_fact_selected[f'att{atten_2}'])
-
-
-
-        # start_time = time.time()
-        yield from bps.mv(shutter, 1)
-        # print(time.time()-start_time)
-        yield from det_set_exposure([quadem], exposure_time=precount_time, exposure_number = 1)
-        # print(time.time()-start_time)
-        # yield from bps.trigger_and_read([quadem]+
-        #                                     [geo] + 
-        #                                     [S2] +
-        #                                     [attenuation_factor_signal] +
-        #                                     [attenuator_name_signal] +
-        #                                     [exposure_time_signal],name='precount')
-
-
-
-        # yield from bps.trigger_and_read([quadem],name='precount')
-        if auto_atten:
-            print('Start running automatic attenuator')
-            yield from automate_attenuator() ## set the abs2 based an automatic attenuation macro.
-            atten_2 = abs2.position
-            # yield from bps.mv(abs2, atten_2)  
-            yield from bps.mv(attenuator_name_signal, f'att{int(atten_2)}')
-            if att_fact_selected != None:
-                yield from bps.mv(attenuation_factor_signal, att_fact_selected[f'att{int(atten_2)}'])
-        else:
-            yield from bps.trigger_and_read([quadem],name='precount')
-        # yield from det_set_exposure([detector, quadem], exposure_time=exp_time, exposure_number = 1)
-    
-        yield from bps.sleep(0.2)
-        yield from bps.mv(shutter, 1)
-        yield from bps.sleep(0.2)
-        yield from bps.trigger_and_read(all_area_dets +
-                                            [geo] + 
-                                            [S2] +
-                                            [abs2] +
-                                            [attenuation_factor_signal] +
-                                            [attenuator_name_signal] +
-                                            [exposure_time_signal],
-                                            name='primary')
-        # print(time.time()-start_time)
-        yield from bps.mv(shutter, 0)
-        # print(time.time()-start_time)
-        
-    yield from bps.sleep(2)
 
 def det_exposure_time(exp_t, meas_t=1):
     yield from bps.mov(
@@ -264,7 +113,7 @@ def read_shutter():
     print(f"shutter status: {value}")
 
 
-def find_abs(alpha1, precount_time, abs_last1):
+def find_abs(alpha1, precount_time, abs_last1,exp_time):
     '''TODO abs_last1 doesnt seem to work properly'''
     threshold = 3e3
  
@@ -297,16 +146,42 @@ def find_abs(alpha1, precount_time, abs_last1):
         r_4= i_4/precount_time
         r_2= i_2/precount_time
         # look at the maximum count of the pre-count and adjust the default attenuation, can do multiple iterations
-        print("\nCOUNT RATES: i4max:i4,r4max:r4", i_max4, i_4,r_max4,r_4)
-        print("COUNT RATES: i2,:r2", i_2,r_2)
+   #     print("\nCOUNT RATES: i4max:i4,r4max:r4", i_max4, i_4,r_max4,r_4)
+   #     print("COUNT RATES: i2,:r2", i_2,r_2)
         
 # This uses region 2
         if i_2 != 0.0:
             # calculating the attenuator diff
             att_diff=np.floor(np.log10(r_2/threshold)/np.log10(14))
-            print("calculating attenuator difference",att_diff)
+        #    print("calculating attenuator difference",att_diff)
             abs_final = int(abs_start + att_diff)
-            if abs_final < 0: abs_final = 0
+            print("Would like to change the attenuator to",abs_final)
+
+            if abs_final <= (abs_start-1):
+                print("Trying to change the attenuator by more than 1")
+                abs_final=abs_start-1
+            if abs_final < 0:
+                abs_final = 0
+# this does a recount if the attenuator changed
+            if abs_final != abs_start:
+                yield from bps.mv(abs2,abs_final)
+                yield from bps.mv(shutter, 1)
+                yield from bps.sleep(0.2)
+                yield from read_shutter()
+                ret = yield from bps.trigger_and_read([lambda_det], name='precount')
+                i_2 = ret['lambda_2']['value']
+                r_2= i_2/precount_time
+                yield from bps.mv(shutter, 0)
+            # recalculate the counting time
+            Target_counts = 60000
+            Target_exposure_min = 2
+            exp_calc= Target_counts/(r_2+0.001)
+  #          print("1:calculated exposure time =",exp_calc)
+
+            if exp_calc <= Target_exposure_min:
+                exp_time =Target_exposure_min
+                print("Changing count time to", exp_time)
+#             print("2:calculated exposure time =",exp_time)
         else:
             abs_final = abs_last1
 # # this allows to remove/add at most 2 attenuators
@@ -325,7 +200,7 @@ def find_abs(alpha1, precount_time, abs_last1):
 #         if abs_final >6:  abs_final =6
 #         print(f"initial attenuator : final attenuator : last value {abs_start} : {abs_final}: {abs_last1}","\n")
         abs_last1=abs_final
-        return abs_final, abs_last1
+        return abs_final, abs_last1, exp_time
         
 # This uses region 4
 #         if i_max4 != 0.0:
@@ -390,7 +265,7 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
             
             ### this is a quick patch for loss the incident angle. 2024/11/22
             # THIS IS A SECOND ALPHA BETA MOVE
-            yield from bps.sleep(5)
+ #           yield from bps.sleep(5)
             if IN_SIM_MODE:
                 if abs(geo.ia.readback.get()-alpha)>0.001:
                     print(f'Target ia {alpha}, current ia {geo.ia.readback.get()}.')
@@ -414,11 +289,14 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
 
         if abs(x2_fraction)>0:
             yield from bps.mv(geo.stblx2,x2_nominal+x2_fraction)
+#TODO We may not need this wait time
             yield from bps.sleep(5) # Wait for vibration going away for Kibron troughs (HZ)
         # yield from bps.mv(block.y,x2_nominal+x2_fraction+block_offset) # large trough
         # yield from bps.mv(block.y,blocky_nominal+x2_fraction+block_offset) # small trough, multiple slits
 
         if x2_offset_stop != x2_offset_start: 
+
+#TODO We may not need this wait time
             yield from bps.sleep(2) # sleep every time after x2 move (HZ)
         yield from bps.sleep(wait_time)    
         # REMOVED FOR MOLTEN SALTS
@@ -433,7 +311,7 @@ def reflection_scan(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,
         # AUTO MODE FIGURES OUT THE APPROPIRAE ATTENUATOR BY DOING TESTS WITH HIGH ATTENUATOR NUMBERS
         if atten_2 == "auto":
          # the following adjusts the attenuator (and maybe the counting at latter stage)
-            att,abs_last1=yield from find_abs(alpha,precount_time, abs_last)
+            att,abs_last1,exp_time=yield from find_abs(alpha,precount_time, abs_last,exp_time)
          #   if alpha = alpha_start[i]= 0:
          #       print("its auto")
         # CALC MODE FIGURES OUT THE APPROPIRAE ATTENUATOR USING A FORMULA
@@ -503,12 +381,14 @@ def calc_att_auto(alphai, precount_time=1,detector=lambda_det):
             # yield from bps.mv(abs2, atten_2)  
     yield from bps.mv(attenuator_name_signal, f'att{int(atten_2)}')
     if att_fact_selected != None:
-            yield from bps.mv(attenuation_factor_signal, att_fact_selected[f'att{int(atten_2)}'])
+            yield from bps.mv(attenuation_far_maxctor_signal, att_fact_selected[f'att{int(atten_2)}'])
     else:
         yield from bps.trigger_and_read([quadem],name='precount')
     # yield from det_set_exposure([detector, quadem], exposure_time=exp_time, exposure_number = 1)
 
     yield from bps.mv(shutter, 1)
+    yield from bps.sleep(0.2)
+
     yield from bps.trigger_and_read(all_area_dets +
                                         [geo] + 
                                         [S2] +
@@ -520,8 +400,7 @@ def calc_att_auto(alphai, precount_time=1,detector=lambda_det):
     # print(time.time()-start_time)
     yield from bps.mv(shutter, 0)
     # print(time.time()-start_time)
-    
-    yield from bps.sleep(2)
+    yield from bps.sleep(0.2)
 
 
 def calc_att_from_ai(alphai):
@@ -799,6 +678,156 @@ def automate_attenuator(precount_time=1,detector=lambda_det, upper_limit=2e5, to
         
     yield from atten_cal_and_move()
 
+
+@bpp.stage_decorator(all_area_dets)
+def reflection_scan_old(scan_param, i, detector=lambda_det, md={}, tilt_stage=False,x2_nominal=0,blocky_nominal=0, usekibron = False, auto_atten = False, trough = None, compress = False, target_pressure=0):
+
+    alpha_start =   scan_param["start"][i]
+    alpha_stop =    scan_param["stop"][i]
+    number_points = scan_param["n"][i]
+    atten_2 =       scan_param["atten"][i]
+    s2_vg =         scan_param["s2vg"][i]
+    exp_time =      scan_param["exp_time"][i]
+    precount_time=  scan_param["pre_time"][i]
+    wait_time =     scan_param["wait_time"][i]
+    x2_offset_start =     scan_param["x2_offset_start"][i]
+    x2_offset_stop =     scan_param["x2_offset_stop"][i]
+    block_offset   =     scan_param["beam_block_offset"][i]
+
+
+
+# setting up so that if alpha is moved negative that there is an extra wait
+    alpha_old=5
+    print(alpha_start,"----",alpha_stop,atten_2)
+    for alpha in np.linspace(alpha_start, alpha_stop, number_points):
+        # Move to the good geometry position
+        if tilt_stage:
+             yield from nab(alpha, alpha)
+        else:
+            if alpha >= alpha_old:
+                yield from mabt(alpha, alpha, 0)
+
+                # if alpha-alpha_old < 0.05: ## added by HZ 2022-10-17 due to low geometry resolution
+                #     yield from mabt(alpha-0.1, alpha-0.1, 0)
+                #     yield from bps.sleep(1)
+                #     yield from mabt(alpha, alpha, 0)
+                # else:
+                #     yield from mabt(alpha, alpha, 0)
+
+            else:
+                yield from mabt(alpha-0.1, alpha-0.1, 0)
+                yield from bps.sleep(1)
+                yield from mabt(alpha, alpha, 0)
+            
+            ### this is a quick patch for loss the incident angle. 2024/11/22
+            yield from bps.sleep(5)
+            if abs(geo.ia.user_setpoint.value-alpha)>0.001:
+                print(f'Target ia {alpha}, current ia {geo.ia.user_setpoint.value}.')
+                yield from bps.mv(geo.ia, alpha)
+
+            if abs(geo.oa.user_setpoint.value-alpha)>0.001:
+                print(f'Target oa {alpha}, current ia {geo.oa.user_setpoint.value}.')
+                yield from bps.mv(geo.oa, alpha)
+
+        #yield from mabt(geo.alpha=0,geo.samchi=x,geo.beta=2*x)
+        fraction  = (alpha-alpha_start)/(alpha_stop-alpha_start)
+        x2_fraction =fraction*(x2_offset_stop-x2_offset_start) + x2_offset_start ## Need to add x2_offset_start (HZ)
+
+        yield from bps.mv(S2.vg,s2_vg)
+        if abs(x2_fraction)>0:
+            yield from bps.mv(geo.stblx2,x2_nominal+x2_fraction)
+            yield from bps.sleep(5) # Wait for vibration going away for Kibron troughs (HZ)
+        # yield from bps.mv(block.y,x2_nominal+x2_fraction+block_offset) # large trough
+        # yield from bps.mv(block.y,blocky_nominal+x2_fraction+block_offset) # small trough, multiple slits
+        if x2_offset_stop != x2_offset_start: 
+            yield from bps.sleep(2) # sleep every time after x2 move (HZ)
+        yield from bps.sleep(wait_time)    
+        # REMOVED FOR MOLTEN SALTS
+        #if alpha <= alpha_old:
+        #    yield from bps.sleep(10) 
+        #    print("wating an extra 10 sec")  
+        alpha_old =alpha
+
+
+        #Attenuator MODE
+        # Set the absorber time to the define exp_time for the measurement
+        # AUTO MODE FIGURES OUT THE APPROPIRAE ATTENUATOR BY DOING TESTS WITH HIGH ATTENUATOR NUMBERS
+        if atten_2 == "auto":
+            yield from calc_att_auto(alpha, precount_time=precount_time,detector=detector)
+        # CALC MODE FIGURES OUT THE APPROPIRAE ATTENUATOR USING A FORMULA
+        elif atten_2 == "calc":
+            att = calc_att_from_ai(alpha)
+            yield from bps.mv(abs2, atten_2)
+        # THE ATTENUATOR NUMBER IS GIVEN BUT THE OUTPUT ON THE ATTENUATO VALU IS INCORRECT
+        else:            
+            if isinstance(atten_2,int):
+                att=atten_2
+                yield from bps.mv(abs2, att)    
+        
+        # else:
+        #     print('The absorber should be auto, calc, or int. Here will use auto.')
+        #     yield from calc_att_auto(alphai, precount_time=1)
+        #set metadata
+        # IF NOT EQUAL TO AUTO SETTING THE META DATA, THIS CHOOSES THE att_bar data structure to use
+        #  THIS IS INCORRECT SINCE ATTENUATOR VALUES ARE NOT KNOWN.
+        
+        if atten_2 != "auto":
+            yield from bps.mv(attenuation_factor_signal, att_bar1['attenuator_aborp'][att])
+            yield from bps.mv(attenuator_name_signal, att_bar1['name'][att])
+
+    
+       ##### to use the new attenbank #### 
+        yield from bps.mv(abs2, atten_2)  
+        # print(f"attenuation is {atten_2}")
+        yield from bps.mv(attenuator_name_signal, f'att{atten_2}')
+        if att_fact_selected != None:
+            yield from bps.mv(attenuation_factor_signal, att_fact_selected[f'att{atten_2}'])
+
+
+
+        # start_time = time.time()
+        yield from bps.mv(shutter, 1)
+        # print(time.time()-start_time)
+        yield from det_set_exposure([quadem], exposure_time=precount_time, exposure_number = 1)
+        # print(time.time()-start_time)
+        # yield from bps.trigger_and_read([quadem]+
+        #                                     [geo] + 
+        #                                     [S2] +
+        #                                     [attenuation_factor_signal] +
+        #                                     [attenuator_name_signal] +
+        #                                     [exposure_time_signal],name='precount')
+
+
+
+        # yield from bps.trigger_and_read([quadem],name='precount')
+        if auto_atten:
+            print('Start running automatic attenuator')
+            yield from automate_attenuator() ## set the abs2 based an automatic attenuation macro.
+            atten_2 = abs2.position
+            # yield from bps.mv(abs2, atten_2)  
+            yield from bps.mv(attenuator_name_signal, f'att{int(atten_2)}')
+            if att_fact_selected != None:
+                yield from bps.mv(attenuation_factor_signal, att_fact_selected[f'att{int(atten_2)}'])
+        else:
+            yield from bps.trigger_and_read([quadem],name='precount')
+        # yield from det_set_exposure([detector, quadem], exposure_time=exp_time, exposure_number = 1)
+    
+        yield from bps.sleep(0.2)
+        yield from bps.mv(shutter, 1)
+        yield from bps.sleep(0.2)
+        yield from bps.trigger_and_read(all_area_dets +
+                                            [geo] + 
+                                            [S2] +
+                                            [abs2] +
+                                            [attenuation_factor_signal] +
+                                            [attenuator_name_signal] +
+                                            [exposure_time_signal],
+                                            name='primary')
+        # print(time.time()-start_time)
+        yield from bps.mv(shutter, 0)
+        # print(time.time()-start_time)
+        
+    yield from bps.sleep(2)
 
 '''There is bug for change atten from 1 back to 2 at alpha =0.8. It should keep at 1'''
 

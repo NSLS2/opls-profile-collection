@@ -289,11 +289,14 @@ def gid_scan_soller_beta(scan_dict={}, md=None, detector = pilatus100k, alphai =
 
         # Open shutter, sleep to initiate quadEM, collect data, close shutter
                 yield from bps.mv(shutter,1)
+                yield from bps.sleep(0.2)
                 yield from bps.trigger_and_read([quadem] + [detector] +  [geo] + [AD1] + [AD2] + [o2_per] + [chiller_T]+ [attenuation_factor_signal] + 
                                             [exposure_time_signal], 
                                             name='primary')
             
                 yield from bps.mv(shutter,0)
+                yield from bps.sleep(0.2)
+
 
         if len(sh_offset_list) > 0:
             yield from bps.mv(sh, sh_nomimal)

@@ -15,13 +15,6 @@ slit_x2_offset_edge = 0 # the edge position of slit_x2 (opposite of x2.position)
 slit_x2_offset_gap = 10.3 # offset between the edge and the slit gap
 slit_x2_offset_block = slit_x2_offset_edge + 1 # to block the beam
 
-soller trans = 4 for regular Sollermeasurement
-soller trans = -1.5 for gap for PXR
-
-RE(bp.rel_scan([pilatus100kA],op_slitx,-4, 4, 41,per_step=shutter_flash_scan))
-
-flow1 for XRF collimator is 2.2
-
 
 Procedure:
 
@@ -33,30 +26,24 @@ Procedure:
 5. Clean the trough
 
 Repeat the procedure above for the next sample
-
-
-
 '''
-
-# set_project_name('0_alignment')
-set_project_name('1_PFOS')
+set_project_name('2_PFOS')
 # currently working at /nsls2/data/smi/proposals/2026-3/pass-319804/projects/1_PFOS/
 
 # 
 atten_slit = 0 # -1.767 # -1.7843
 soller_tran_soller = 4 # 5.5 # 5.5 # 4
-soller_tran_gap = -1.5 # 4 # 5 # to use the center gap on the soller slits
+soller_tran_gap = -2 # -1.5 # 4 # 5 # to use the center gap on the soller slits
 constant_he_gid = 2.6 # 2.5 #2.6
 collimator_he_rate = 2.2 
 counter=0 ## the counter is used as a file discriptor
 Sensor1 = 17.8
 Sensor2 = 28.99
 KibronP = 132.111
-global File_type, Epoch_start, Simulate
+global File_type, Epoch_start
 # allowed File_type Senso1, Senso2, Kibron, None, time
-File_type = "Sensor1"
+#File_type = "Sensor1"
 Epoch_start = time.time()
-Simulate = False
 # slit_x2 to sample distance: ~87mm, HZ, 2025/06/20
 
 #Not sure where to store the following
@@ -66,12 +53,18 @@ def changeSample():
     yield from mabt(0,0,0)
 
 def slitX2_cleanup():
-
-    '''to move the motor to initial positoins after control C
-    '''
+#   to move the motor to initial positoins after control C
     yield from beam_off()
     yield from bps.mov(abs2,5)
     yield from slitX2_out()
+
+# this overwrite the regularly loaded sh scans
+def sample_height_set_fine(atten_2=5, finescan=False):
+    yield from sample_height(alpha=0.06, range=0.3,npts=21,time=1,settle_time = 1, atten_2=atten_2, finescan=finescan)
+
+def sample_height_set_coarse(value=0):
+    yield from sample_height(alpha=0.06, range=4,npts=31,time=0.5,settle_time = 0, finescan=False)
+checks_init_all = {"mode":"Soller","coarse":True,"file_type": "Time","epoch_start": False}
 
 #This sets up the class for each sample
 # name is ascii
@@ -88,57 +81,53 @@ x2_pos1 =-60
 x2_pos2 = 10
 x2_pos3 = 50
 
-checks_init_all = {"mode":"Soller","coarse":True,"file_type": "Time","epoch_start": False}
 xr_init_all ={"start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
 
-checks_init1 = {"method":"XR","det_mode":"XR","phi":False, "ih":False, "tth":False, "astth":False, "coarse":True,"file_type":"Kibron"}
-checks_init2 = {"method":"XR","det_mode":"XR","coarse":True,"file_type": "Sensor1"}
-checks_init3 = {"method":"XR","det_mode":"XR","coarse":True,"file_type": "Time","epoch_start": False}
+checks_init1 = {"method":"checks","det_mode":"XR","phi":False, "ih":False, "tth":False, "astth":False, "coarse":True,"file_type":"Kibron"}
+checks_init2 = {"method":"checks","det_mode":"XR","coarse":True,"file_type": "Sensor1"}
+checks_init3 = {"method":"checks","det_mode":"XR","coarse":True,"file_type": "Time","epoch_start": False}
 checks_init4 = {"method":"checks","det_mode":"XR","coarse":True,"file_type": "none","epoch_start": False}
-
+checks_init5 = {"method":"checks","det_mode":"XR","phi":False, "ih":False, "tth":False, "astth":False, "coarse":True,"file_type":"Kibron"}
 
 xr_init={"method":"XR","scan_file": "xr_scan1.csv", "start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
-xrf_init={"method":"XRF","scan_file":"xrf_scan1.csv", "start": "all", "end":99,"scan_dir": "global", "auto_atten":False}
-soller_init ={"method":"Soller","x2_direction":1,"block_pos": 0,"q_start":1.3,"q_end":1.8,"npts":21,"exp_time":20, "alpha_i":0.0728, "wait_time":5,"atten":-1.775}
+xr_init_a={"method":"XR","scan_file": "xr_scan1.csv", "start": 0, "end":99,"scan_dir": "local", "auto_atten":True}
+xrf_init={"method":"XRF","scan_file":"xrf_scan1.csv", "start": "all", "end":98,"scan_dir": "global", "auto_atten":False}
+soller_init ={"method":"Soller","x2_direction":1,"block_pos": 0,"q_start":1.3,"q_end":1.8,
+              "npts":21,"exp_time":1, "alpha_i":0.0728, "wait_time":5,"atten":-1.775 }
 gisaxs_init = {"method":"gisaxs","x2_direction":1,"atten": 0, "exposure_time":1, "incident_angle": 0.0728, "bs_pos": -15.82}
 giwaxs_init = {"method":"giwaxs","incident_angle": 0.0728, "atten": 0, "exposure_time": 1.7, "tth": 0, "x2_direction":17 , "block_pos": 60, "use_slitx2": True, "sh_offset": -1}
-giwaxs_bkg_init ={"method":"giwaxs_bkg","incident_angle": 0.0728, "atten": 0, "exposure_time": 1.7, "tth": 0, "x2_direction":17 , "block_pos": 60, "use_slitx2": True, "sh_offset": -1}
+giwaxs_bkg_init ={"method":"giwaxs_bkg","iget_name(ncident_angle": 0.0728, "atten": 0, "exposure_time": 1.7, "tth": 0, "x2_direction":17 , "block_pos": 60, "use_slitx2": True, "sh_offset": -1}
 pseudo_init= {"method":"pseudo","alpha":0.0728, "num_point": 2, "exp_time": 30, "x2_per_step": 0, "atten": -1.5, "soller_tran":-1.5, "slit":'slit_x2'}
 
 counter=33
-sample1 =Sample("name1",17, counter, "Kibron",15)
+sample1 =Sample("water_auto_target",-10, counter, "Kibron",15)
 sample2 =Sample("name2",17, counter, "Time",15)
-sample3 =Sample("name2",17, counter, "none",15)
+sample3 =Sample("water_soller",-10, counter, "none",15)
 
-run1 = (sample1, xr_init)
-run2 = (sample2, checks_init4)
-run3  = (sample3, xrf_init)
-runs= [run1, run2, run3]
-runs=[run1]
+sample3 =Sample("Test3_SKS_C263_B13_PFOS_His_0.4mM_ea_pH11",-56, counter, "none",15)
 
 
-# all this is called samples, it is really a technique run and may or may not canple the sample and sample position
-# this version has two variables for the x2 position, one could be removed
-
-# samples = []
-# samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init1]))
-# samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
-# samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init2]))
-# samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
-# samples.append(Sample("sample_1", x2_pos1,[ "checks",checks_init3]))
-# samples.append(Sample("sample_1", x2_pos2,[ "gisaxs",gisaxs_init]))
+scan1 =  (sample1, xr_init_a)
+scan2 =  (sample2, checks_init5)
+scan3  = (sample3, soller_init)
+scan4  = (sample3, pseudo_init)
+scan5  = (sample3, xrf_init)
+scan5a = (sample3, checks_init5)
+scan5a = (sample3, checks_init5)
+scan6 =  (sample3, xr_init_a)
 
 
+scans= [scan1, scan2, scan3]
+scans=[scan5a,scan5]
+scans= [scan6]
 
-# This is the routine that checks to make sure that the same is allowed
-#allowed_list=['XR','XRF','GISAXS','GIWAXS','GIWAXS_BKG','Soller','pseudo', 'checks']
-allowed_list=['xr','xrf','gisaxs','giwaxs','giwaxs_bkg','soller','pseudo', 'checks']
+allowed_list=['xr','xrf','gisaxs','giwaxs','giwaxs_bkg','soller','pseudo', 'checks', 'kibron']
 
 def check_commands():
     set_allowed=1
-    all_list = list(range(len(runs)))
+    all_list = list(range(len(scans)))
     for ii in all_list:
-        method=runs[ii][1]["method"]
+        method=scans[ii][1]["method"]
         # this is to make it case insensitive, not working
         if allowed_list.count(method.lower()) == 1:
             print(method,"is an allowed method:", method)
@@ -154,10 +143,11 @@ Epoch_start=time.time()
 
 def xr(item):
     yield from set_mode("XR")
-    file_name=get_name(item)
-    x2_pos=runs[item][0].pos
-    extras=runs[item][1]
-    print("Starting XR scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
+    print("Starting XR scan with file-", file_name, "  at x2=",x2_pos,"extras:"
+,extras)
     yield from xr_scan_file(file_name,**extras)
 
 # This is where the type of XRF scans are defined. The same as xr() except the name        
@@ -166,20 +156,21 @@ def xr(item):
 # Could also include calling old fashion scans that were hard wired
 def xrf(item):
     yield from set_mode("XRF")
-    file_name=get_name(item)
-    x2_pos=runs[item][0].pos
-    extras=runs[item][1]
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
     print("Starting XRF scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
     yield from xrf_scan_file(file_name, **extras)
+
 
 # This is where the type of Soller scans are defined.  This does not read from a file.
 # This can be generalized so that different samples used different scans
 # Currently this is define in q space but the intent is to write this in anngle spacecall
-def soller(item):
+def soller_gid(item):
     yield from set_mode("Soller")
-    file_name=get_name(item)
-    x2_pos=runs[item][0].pos
-    extras=runs[item][1]
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
     print("Starting Soller scan with file-", file_name, "  at x2=",x2_pos,"extras:",extras)
     yield from soller_scanq(file_name, **extras) # block edge at -31.5
 
@@ -187,9 +178,9 @@ def soller(item):
 # This can be generalized so that different samples used different scans
 def gisaxs(item):
     yield from set_mode("GISAXS")
-    file_name=get_name(item)
-    x2_pos=runs[item][0].pos
-    extras=runs[item][1]
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
     print("Starting GISAXS scan with file- ",file_name, "  at x2=",x2_pos,extras)
     yield from gisaxs_scan(file_name, **extras)
 
@@ -197,17 +188,17 @@ def gisaxs(item):
 # This can be generalized so that different samples used different scans
 def giwaxs(item):
     yield from set_mode("GIWAXS")
-    file_name=get_name(item)
-    x2_pos=runs[item][0].pos
-    extras=runs[item][1]
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
     print("Starting GIWAXS scan with file- ",file_name, "  at x2=",x2_pos)
     yield from giwaxs_scan(file_name, **extras)
 
 def giwaxs_bkg(item):
     yield from set_mode("GIWAXS")
-    file_name=get_name(item)
-    x2_pos=runs[item][0][0].pos
-    extras=runs[item][1]
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
     print("Starting GIWAXS scan with file- ",file_name, "  at x2=",x2_pos)
     yield from giwaxs_scan_bkg(file_name, **extras)
 
@@ -217,10 +208,12 @@ def giwaxs_bkg(item):
 
 def pseudo(item):
     yield from set_mode("PSEUDO")
-    file_name=get_name(item)
-    x2_pos=runs[item][0].pos
+    file_name=get_name_scan(item)
+    x2_pos=scans[item][0].pos
+    extras=scans[item][1]
     print("Starting PSEUDO scan with file- ",file_name, "  at x2=",x2_pos)
-    yield from gixos_multiqxy(file_name_dict[number]+'_pxr', alpha = 0.0728, num_point = 1, exp_time = 30, x2_per_step = 0, atten=-1.5, slit='slit_x2')
+  #  yield from gixos_multiqxy(file_name_dict[number]+'_pxr', alpha = 0.0728, num_point = 1, exp_time = 30, x2_per_step = 0, atten=-1.5, slit='slit_x2')
+    yield from gixos_multiqxy(file_name,  **extras)
 
 def kibron(item):
     print("Simulation mode: checking accuracy of kibron variables")
@@ -257,37 +250,38 @@ def kibron_stop_measure():
 def check_all(item,mode="checks",det_mode="XR",phi=True, ih=True, tth=True, astth=True,
             coarse=True, file_type="none", epoch_start=False,**kwargs):
     global Epoch_start
+    print("phi=",phi)
     if epoch_start == True:
         Epoch_start=time.time() #starts the clock for the time to be used in the file name
     #print(f"check_all({', '.join(f'{k}={v}' for k, v in kwargs.items())})")
-    x2_pos=runs[item][0].pos
+    x2_pos=scans[item][0].pos
     yield from set_mode(det_mode)
     print("Checking the alignment at x2=",x2_pos, " using mode: ",det_mode)
     if phi    == True:
         print("running phi check")
-        #  check_phi()
+        yield from check_phi()
+        print("done checking phi")
     if ih     == True:
         print("running ih check")
-        #check_ih()
+        yield from check_ih()
     if tth    == True:
         print("running tth check")
-            #check_tth()
+        yield from check_tth()
     if astth  == True:
         print("running astth check")
     # yield from slitX2_out() # what if we are not using x2
     # yield from bps.mv(geo.stblx2,samp_x2_start)
     if coarse == True:
         print("running coarse sample height check")
-    #  check_coarse()
+        yield from sample_height_set_coarse()   
     return()
 
 # Pre scans
 def xr_pre(item):
-    print('XRR prescans')
-    samp_x2_start=samples[item].pos
+    print('XR prescans')
+    samp_x2_start=scans[item][0].pos
     yield from set_mode('XR')
     yield from bps.mv(geo.stblx2,samp_x2_start)
-    yield from bps.sleep(10)
     yield from slitX2_out()
     yield from bps.mv(flow2,2.4)
     yield from sample_height_set_fine() #scan the detector arm height from -0.2 to 0.2 with 21 points
@@ -295,32 +289,34 @@ def xr_pre(item):
 
 def xrf_pre(item):
     print('XRF prescans')
-    samp_x2_start=runs[item][0].pos
+    samp_x2_start=scans[item][0].pos
     yield from set_mode('XR')
     yield from bps.mv(geo.stblx2,samp_x2_start)
-    yield from bps.sleep(10)
     yield from bps.mv(flow1,collimator_he_rate)
     yield from bps.mv(flow2,constant_he_gid)
     yield from slitX2_out()
-    yield from det_set_exposure([detector], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([xs,lambda_det], exposure_time=1, exposure_number = 1)
     yield from sample_height_set_fine()   #scan the detector arm height from -0.2 to 0.2 with 21 points
+    yield from set_mode('XRF')
 
 def soller_pre(item):
     print('Soller prescans')
-    samp_x2_start=samples[item][0].pos
+    samp_x2_start=scans[item][0].pos
     yield from set_mode('Soller')
     yield from bps.mv(geo.stblx2,samp_x2_start)
-    yield from bps.sleep(10)
     yield from bps.mv(flow2,constant_he_gid)
    # yield from bps.mv(geo.stblx2,samp_x2_start+5*x2_direction)   # we need to fix this
-    yield from slitX2_out()
+    #yield from slitX2_out()
     # increase He flow rate a little bit
+    yield from det_set_exposure([pilatus100kA], exposure_time=0.5, exposure_number = 1)
     slit_x2_offset_block = yield from check_slitX2_block(block_offset=1.5)
-    yield from det_set_exposure([detector], exposure_time=1, exposure_number = 1)
+#TODO  we probably dont have to back out the slit so far
+    yield from slitX2_out()
+    yield from det_set_exposure([pilatus100kA], exposure_time=0.5, exposure_number = 1)
     yield from sample_height_set_fine()   #scan the detector arm height from -0.2 to 0.2 with 21 points
 
 def gisaxs_pre(item):
-    samp_x2_start=runs[item][0].pos
+    samp_x2_start=scans[item][0].pos
 
     def saxs_on():
 
@@ -328,7 +324,8 @@ def gisaxs_pre(item):
         # SAXSY1: 15
         # SAXSY2: 25
         # det2_off(SAXS): -10.8
-        # det x = -0.7
+        # det x = -0.7    extras=scans[item][1]
+
         # det y = 0
         # bs_x: -15.82
         # bs_y: 25
@@ -347,16 +344,15 @@ def gisaxs_pre(item):
     yield from set_mode('GISAXS')
     yield from bps.mv(geo.stblx2,samp_x2_start)
     yield from slitX2_out()
-    yield from det_set_exposure([detector], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([pilatus1m], exposure_time=1, exposure_number = 1)
     yield from sample_height_set_fine()   
 
 
 def giwaxs_pre(item):
     print('GIWAXS prescans')
-    samp_x2_start=runs[item][0].pos
+    samp_x2_start=scans[item][0].pos
     yield from set_mode('GIWAXS')
     yield from bps.mv(geo.stblx2,samp_x2_start)  #move the  Sample Table X2 to xpos
-    yield from bps.sleep(10)
     yield from slitX2_out()
     yield from bps.mv(flow2,2.5)
     slit_x2_offset_block_new = yield from check_slitX2_bloRck()
@@ -365,34 +361,30 @@ def giwaxs_pre(item):
 
 def pseudo_pre(item):
     print('PSEUDO/GIXOS prescans')
-    samp_x2_start=runs[item][0].pos
+    samp_x2_start=scans[item][0].pos
     yield from set_mode('Soller')
     yield from bps.mv(geo.stblx2,samp_x2_start)  #move the  Sample Table X2 to xpos
-    yield from bps.sleep(10)
+    yield from slitX2_out()
     yield from sample_height_set_fine()   #scan the detector
 
 def gisaxs_post(item):
-    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([pilatus100,quadem], exposure_time=1, exposure_number = 1)
     print('GISAXS is done')
 
-
-# Post scansure_time=1, exposure_number = 1)
-    n_pseudo = n_xr =n_xrf = n_soller = n_gisaxs = n_giwaxs=0
-
 def xrf_post(item):
-    yield from det_set_exposure([lambda_det,quadem], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([lambda_det,xs,quadem], exposure_time=1, exposure_number = 1)
     yield from bps.mv(flow2,2.1)
     yield from bps.mv(flow1,0)
     yield from set_mode('XR')
     print('XRF is done')
 
 def soller_post(item):
-    yield from det_set_exposure([lambda_det,quadem], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([lambda_det,quadem,pilatus100kA], exposure_time=1, exposure_number = 1)
     yield from bps.mv(flow2,2.1) ## change He rate back
     print('Soller is done')
 
 def xr_post(item):
-    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([lambda_det,quadem], exposure_time=1, exposure_number = 1)
     print('XR  is done')
 
 def xrf_post(item):
@@ -402,35 +394,34 @@ def xrf_post(item):
     print('XRF  is done')
 
 def gisaxs_post(item):
-    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([pilatus1m,quadem], exposure_time=1, exposure_number = 1)
     print('GISAXS is done')
 
 def giwaxs_post(item):
-
     yield from det_set_exposure([pilatus300k,quadem], exposure_time=1, exposure_number = 1)
     yield from bps.mv(flow2,2.1)
     yield from slitX2_out()
     print('GIWAXS is done')
 
 def pseudo_post(item):
-    yield from det_set_exposure([lambda_det,quadem], exposure_time=1, exposure_number = 1)
+    yield from det_set_exposure([pilatus100kA,quadem], exposure_time=1, exposure_number = 1)
     yield from bps.mv(flow2,2.1)
     yield from slitX2_out()
     print('Pseudo/GIOXS is done')  
 
 
 # #file naming, could be extended to add pressure or run number
-# def get_name(name,index,type):
+# def get_name_scan(name,index,type):
 #     return(name+'_'+index+'_'+str(type))
 
 # File_types
 # None, Sensor1, Sensor2, Kibron, Time
 
-def get_name(index):
-    name=runs[index][0].name
-    method=runs[index][1]["method"]
-    pos=runs[index][0].pos
-    name_type=runs[index][0].name_type
+def get_name_scan(index):
+    name=scans[index][0].name
+    method=scans[index][1]["method"]
+    pos=scans[index][0].pos
+    name_type=scans[index][0].name_type
     print("name type=",name_type)
 
     val=5
@@ -465,7 +456,6 @@ def get_name(index):
 
 
 # we probably need a kibron mode where we add the pressure to the name This was sometimes used in the old code
-#samp_name_new = samp_name+f'_P{one_pressure}'samples[item].name
 
 def run():
     if check_commands() ==0:
@@ -473,23 +463,24 @@ def run():
         print("\033[91mERROR: WILL NOT TAKE DATA\033[0m")
         print("\a\a\a")
         return
-    all_list = list(range(len(runs)))
+    all_list = list(range(len(scans)))
     counter=0 
     n_pseudo = n_xr =n_xrf = n_soller = n_gisaxs = n_giwaxs=0
 
     # sample_n is the sample number
     for item in all_list:
         counter  +=1
-        sample_name=runs[item][0].name
-        pos=runs[item][0].pos
-        method=runs[item][1]["method"].lower()
+        sample_name=scans[item][0].name
+        pos=scans[item][0].pos
+        method=scans[item][1]["method"].lower()
         print(f'\n\nCurrrently measuring {sample_name} with {method}')
 
     # method is the method number for each sample
 
         if method =="checks":
             counter  -=1 # we do not want to increment the count if it is running check_all
-            yield from check_all(item)
+            extras=scans[item][1]
+            yield from check_all(item, **extras)
 
         if method == "pseudo":
              n_psuedo =counter
@@ -499,39 +490,40 @@ def run():
 
         if method == "soller":
             n_soller = counter
-            #yield from soller_pre(item)
-            yield from soller(item)
-            #yield from soller_post(item)
+            yield from soller_pre(item)
+            yield from soller_gid(item)
+            yield from soller_post(item)
 
         if method == "xrf":
+            print("running xrf")
             n_xrf = counter
-          #  yield from xrfpre(item)
+            yield from xrf_pre(item)
             yield from xrf(item)
-           # yield from xrf_post(item)
+            yield from xrf_post(item)
 
         if  method == "xr":
             n_xr = counter
-            #yield from xr_pre(item)
+            yield from xr_pre(item)
             yield from xr(item)
-            #yield from xr_post(item)
+            yield from xr_post(item)
 
         if method == "gisaxs":
             n_gisaxs = counter
-           # yield from gisaxs_pre(item)
+            yield from gisaxs_pre(item)
             yield from gisaxs(item)
-           # yield from gisaxs_post(item)
+            yield from gisaxs_post(item)
 
         if method == "giwaxs":
             n_giwaxs = counter
-          #  yield from giwaxs_pre(other,item)
+            yield from giwaxs_pre(other,item)
             yield from giwaxs(item)
-           # yield from giwaxs_post(item)
+            yield from giwaxs_post(item)
 
         if method == "giwaxs_bkg":
             n_giwaxs = counter
-         #   yield from giwaxs_pre(item)
+            yield from giwaxs_pre(item)
             yield from giwaxs_bkg(item)
-         #   yield from giwaxs_post(item)
+            yield from giwaxs_post(item)
 
         if method == "kibron":
             val=3
@@ -542,6 +534,8 @@ def run():
             print("running wait with ", val)
             yield from bps.sleep(0)
 
+    # yield from shclose()
+
     # yield from det_set_exposure([quadem, lambda_det, pilatus100kA ], exposure_time=1, exposure_number = 1)
     # yield from bps.mv(geo.stblx2,-55)  #move the  Sample Table X2 to the center
     # yield from slitX2_out()
@@ -549,312 +543,3 @@ def run():
     # # yield from set_mode('XR')
     # yield from mabt(0,0,0)
 
-
-
-start_time = time.time()
-def run_uccs_twotroughs_timeSeries(clock_to_measure = [7.5,10.5], start_time=start_time):
-    ''' 
-    run xrr measurements with different incubation time
-    Note: need to define an incubation starting point (start_time = time.time())
-    clock_to_measure: a list of total waiting time (in hours with respect to start_time) to start each measurement
-    '''
-    # yield from bps.mv(lambda_det.oper_mode,1)
-    # yield from bps.mv(lambda_det.low_thr,6.5)
-
-    detector=lambda_detsoller1
-
-    samp_name_dict = {
-
-        1: 'DMPG+250EGCG+Abeta_1_9',  # front
-        2: 'memb+16ugmL_MUC1pTF+Gal3_2_9',  # back
-    }
-
-    sam_x2_pos ={
-        # center is about -9 by scan a screw in the center # trough size 76
-        #    1: [-63],   # front,  flat area [-65, -35] + 8
-        #    2: [ 30],   # back,   flat area [ 35 ,  4] - 8
-
-        #    1: [-47],   # front,  flat area [-57, -33] + 8 # for water
-        #    2: [ 29],   # back,   flat area [ 42 , 15] - 8 
-
-           1: [-61+7.5],   # front,  flat area [-61, -30] + 8 # for 22mN/m
-           2: [ 40-15],   # back,   flat area [ 40 , 12] - 8 
-    }
-
-    x2_offset = 7.5 # change sample position for each measurement
-
-    xr_run_dict = {
-        1: True,
-        2: True,
-    }
-
-    gid_run_dict = {
-        1: True,
-        2: True,
-    }
-
-    gisaxs_run_dict = {
-        1: True,
-        2: True,
-    }
-
-    
-    for kk,clock in enumerate(clock_to_measure):
-        print(f'Start incubation: Wait for {clock: .1f}h of incubation in total.')
-        current_time = time.time()
-        sleep_time = start_time + clock*60*60 - current_time
-        if sleep_time > 1: 
-            print(f'Incubate for {sleep_time/60: .1f}min in this round')
-            yield from bps.sleep(sleep_time)
-        else:
-            print(f'No additional incubation time is needed in this round')
-            clock = np.round((current_time - start_time)/3600, 1)
-            print(f'Currnet clcok is {clock}h.')
-
-
-            if key == 1: # front one
-                x2_direction = 1
-            elif key == 2: # back one
-                x2_direction = -1
-
-            for ii,samp_x2 in enumerate(samp_x2_list):
-                samp_name_new = samp_name+f'_{clock}h'
-                print(f'Currrently measuring {samp_name_new}')
-                runNum = ii+1
-                samp_x2_start = samp_x2+kk*x2_offset*x2_direction
-                yield from bps.mv(S2.hg, 0.5)
-                yield from bps.mv(S2.vg, 0.05)
-                yield from bps.mv(geo.stblx2,samp_x2_start)  #move the  Sample Table X2 to xpos
-
-                yield from check_phi() #resets phi, the crystal deflector at mab(0,0,0)
-                yield from check_ih()
-                yield from check_astth()
-                yield from sample_height_set_coarse()   #scan the detector
-                yield from sample_height_set_fine()   #scan the detector 
-
-                if xr_run:
-                    print('Starting XRR measurement')
-                    yield from set_mode('XR')
-                    yield from bps.mv(S2.hg, 0.5)
-                    yield from bps.mv(S2.vg, 0.05)
-                    yield from bps.mv(geo.stblx2,samp_x2_start)  #move the  Sample Table X2 to xpos
-                    yield from bps.sleep(5)
-                    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number=1)
-                    yield from sample_height_set_fine() 
-                    yield from one_xrr_new(samp_name_new, x2_direction = x2_direction)
-                    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number=1)
-                    print('XRR is done')
-
-                if gisaxs_run:
-                    print('Starting GISAXS measurement')
-                    yield from set_mode('GISAXS')
-                    yield from bps.mv(S2.hg, 0.3)
-                    yield from bps.mv(S2.vg, 0.04) # added the vertical gap for gisaxs
-                    yield from bps.mv(geo.stblx2,samp_x2_start+6*x2_direction)  #move the  Sample Table X2 to xpos
-                    yield from bps.sleep(5)
-                    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-                    yield from sample_height_set_fine() 
-                    yield from gisaxs_scan1(samp_name_new, x2_direction = x2_direction, exposure_time=1)
-                    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-                    yield from bps.mv(S2.hg, 0.5)
-                    yield from bps.mv(S2.vg, 0.05)
-                    print('GISAXS is done')
-
-                if gid_run:
-                    print('Starting GID measurement')
-                    yield from set_mode('Soller')
-                    yield from bps.mv(S2.hg, 1)
-                    yield from bps.mv(S2.vg, 0.1)
-                    yield from bps.mv(geo.stblx2,samp_x2_start+6*x2_direction)  #move the  Sample Table X2 to xpos
-                    yield from bps.sleep(5)
-                    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-                    yield from sample_height_set_fine() 
-                    yield from bps.mv(flow2,2.5)
-                    yield from gid_soller1(samp_name_new, x2_direction = x2_direction)
-                    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-                    yield from bps.mv(flow2,2.1)
-                    yield from bps.mv(S2.hg, 0.5)
-                    print('GID is done')
-
-
-    yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-    yield from set_mode('XR')
-    yield from mabt(0,0,0)
-
-
-
-def run_kibron():
-
-    detector=lambda_det
-
-    samp_name = 'PFTeDA_pH12'  # 100uL spread at 4:55am, started compression at 5:05am
-    pressure_list   = [    15,    30,    40 ]
-    gid_run_list    = [  True,  True,  True ]
-    xr_run_list     = [ False,  True, False ]
-    gisaxs_run_list = [ False, False, False ]
-
-    GID_highQ = False
-
-    x2_initial = -70
-
-    gisaxs_step = 0
-    gid_step = 6.5
-    xr_step = 8+3.5
-    x2_direction = 1
-
-    atten_slit = -1.873
-
-    samp_x2_interval= np.array(gisaxs_run_list)*gisaxs_step + np.array(gid_run_list)*gid_step + np.array(xr_run_list)*xr_step
-    samp_x2_list    = [x2_initial + x2_direction*np.round(np.sum(samp_x2_interval[:step]),1) for step in range(len(pressure_list))]
-    print(f'target_pressure = {pressure_list}')
-    print(f'x2_position = {samp_x2_list}')
-
-    slit_hg_gisaxs = [0.3]
-    for ii,(one_pressure, samp_x2, gisaxs_run, gid_run, xr_run) in enumerate(zip(pressure_list,samp_x2_list, gisaxs_run_list, gid_run_list, xr_run_list)):
-        runNum = ii+1
-        yield from bps.mv(S2.hg, 0.5)
-        yield from bps.mv(geo.stblx2,samp_x2)  #move the  Sample Table X2 to xpos
-
-        kibron.runConstantPressure(target_pressure=one_pressure, target_speed = 10)
-        print('Sleep to wait for target pressure')
-        if runNum > 0:
-            yield from bps.sleep(3*60)
-
-            # yield from check_phi() #resets phi, the crystal deflector at mab(0,0,0)
-            yield from check_ih()
-        yield from check_astth()
-            
-
-        if gisaxs_run:
-            print('Starting GISAXS measurement')
-            yield from set_mode('GISAXS')
-            for kk,slit_hg in enumerate(slit_hg_gisaxs):
-                print('Slit horizontal gap is set to %.2f'%slit_hg)
-                yield from bps.mv(S2.hg, slit_hg)
-                yield from bps.mv(S2.vg, 0.08) # added the vertical gap for gisaxs
-                yield from det_set_exposure([detector], exposure_time=1, exposure_number = 1)
-                yield from sample_height_set_fine()   #scan the detector arm height from -0.2 to 0.2 with 21 points
-                # yield from sample_height_set_fine_pilatus(detector=pilatus300k)   #scan the detector
-                yield from gisaxs_scan1(samp_name+f'_P{one_pressure}', x2_direction = x2_direction)
-                yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-                # yield from bps.mv(S2.hg, 0.3)
-
-        
-        if gid_run:
-
-            print('Starting GID measurement')
-            yield from set_mode('Soller')
-            yield from bps.mv(S2.hg, 0.5)
-            yield from bps.mv(S2.vg, 0.08) 
-            # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# with extension for gisaxs flight path
-            yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without SAXS flight path extension
-            yield from bps.mv(geo.stblx2,samp_x2+0*x2_direction)  #move the  Sample Table X2 to xpos
-            yield from bps.sleep(5)
-            ## increase He flow rate a little bit
-            # yield from he_on(constant_rate=2.5)
-            yield from bps.mv(flow2,2.5)
-            yield from sample_height_set_fine()
-            x2_original = x2.position
-            samp_name_new = samp_name+f'_P{one_pressure}_lowQ'
-            
-            # ##### for binary
-            # yield from gid_soller2(samp_name_new, x2_direction = x2_direction, atten=atten_slit, wait_time=0.5, expo_time=10)
-
-            #### for single component
-            yield from gid_soller2_short(samp_name_new, x2_direction = x2_direction, atten=atten_slit, wait_time=0.5, expo_time=10)
-
-            ## change He rate back
-            # yield from he_on(constant_rate=2.1)
-            yield from bps.mv(flow2,2.1)
-            yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-            yield from bps.mv(S2.hg, 0.5)
-            yield from bps.mv(S2.vg, 0.08)
-            print('GID is done')
-
-
-
-            ##### For high q measurements
-            if GID_highQ:
-                print('Starting GID measurement: high Q')
-                yield from set_mode('Soller')
-                yield from bps.mv(S2.hg, 0.5)
-                yield from bps.mv(S2.vg, 0.08) 
-                # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# with extension for gisaxs flight path
-                yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without SAXS flight path extension
-                yield from bps.mv(geo.stblx2,samp_x2+3.5*x2_direction)  #move the  Sample Table X2 to xpos
-                yield from bps.sleep(5)
-                ## increase He flow rate a little bit
-                # yield from he_on(constant_rate=2.5)
-                yield from bps.mv(flow2,2.5)
-                yield from sample_height_set_fine()
-                x2_original = x2.position
-                samp_name_new = samp_name+f'_P{one_pressure}_highQ'
-                yield from gid_soller3(samp_name_new, x2_direction = x2_direction, atten=atten_slit, wait_time=0.5, expo_time=15)
-                ## change He rate back
-                # yield from he_on(constant_rate=2.1)
-                yield from bps.mv(flow2,2.1)
-                yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-                yield from bps.mv(S2.hg, 0.5)
-                yield from bps.mv(S2.vg, 0.08)
-                print('GID is done')
-
-
-
-        if xr_run:
-            print('Starting XRR measurement')
-            yield from set_mode('XR')
-            yield from bps.mv(S2.hg, 0.5)
-            yield from bps.mv(S2.vg, 0.08)
-            # yield from bps.mv(fp_saxs.y1,50,fp_saxs.y2,35)# with extension for gisaxs flight path
-            yield from bps.mv(fp_saxs.y1,15,fp_saxs.y2,35)# for normal run without SAXS flight path extension
-            yield from bps.mv(geo.stblx2,samp_x2+7*x2_direction)  #move the  Sample Table X2 to xpos
-
-            yield from check_astth() # check astth
-
-            yield from bps.sleep(5)
-            yield from sample_height_set_fine() #scan the detector arm height from -0.2 to 0.2 with 21 points
-            samp_name_new = samp_name+f'_P{one_pressure}'
-            yield from one_xrr_new(samp_name_new, x2_direction = x2_direction)
-            yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-            print('XRR is done')
-
-
-
-        # print("Starting incubation for 1 hour...")  
-        # yield from bps.sleep(1*60*60)
-
-        yield from det_set_exposure([detector,quadem], exposure_time=1, exposure_number = 1)
-        # yield from bps.mv(geo.det_mode,1)
-        # yield from mabt(0,0,0)
-
-
-    kibron.runConstantPressure(target_pressure=1, target_speed = 70)
-    print('Compression is finishied; stop the Kibron')
-    kibron.device.call('StepStop')
-    kibron.device.call('StopMeasure')
-
-
-
-def kibron_stop_measure():
-    kibron.device.call("StopMeasure")
-
-
-################### TO USE KIBRON ####################
-# To start, run these commands in the bluesky finescanbelow
-    # HOST, PORT = "10.66.91.26", 9897 ## HZ
-    # sock = mtx.connect(HOST, PORT)
-    # device = mtx.Trough(sock)
-    # kibron = KibronTrough(device, sock)
-# To stop the measurement:
-    # kibron.device.call('StepStop')
-    # kibron.device.call('StopMeasure')
-
-#     # kibron_stop_measure()
-# def kibron_stop_measure():
-    # kibron.device.call('StepStop')
-    # kibron.device.call('StopMeasure')
-# To stop the remote server:
-    # kibron.close()
-######################################################
-# this should eventually go into 90-setup.py
-# this version of dscanr will allways user per_setp=flash

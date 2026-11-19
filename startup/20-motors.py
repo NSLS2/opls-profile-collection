@@ -50,7 +50,7 @@ asth =  ROT("XF:12ID1-ES{Smpl-Ax:", name ="asth")
 
 def setX2limit(x2_limit=[-100, 100]):
     '''set the X2 limit for different covers
-    XRF cover: [-78, 50]
+    XRF cover: [-80, 50]
     Aluminum cover: [-100, 100]
     '''
     

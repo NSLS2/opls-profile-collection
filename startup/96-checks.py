@@ -137,7 +137,7 @@ def check_tth_pseudo(detector=lambda_det):
     
 
 
-def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, atten_2=5, finescan=False):
+def sample_height(alpha=0.08, range=0.3, npts=31,time=0.5, settle_time = 0, atten_2=5, finescan=False):
    
     yield from bps.mv(abs2,atten_2)
     yield from mabt(alpha,alpha,0)
@@ -151,29 +151,43 @@ def sample_height(alpha=0.08, range=0.3, npts=31,time=1, settle_time = 2, atten_
         yield from bps.mv(fp_saxs.y1,20-5,fp_saxs.y2,40-5)# with CRLS
 
 
-    Msg('reset_settle_time', sh.settle_time, settle_time)
+    # Msg('reset_settle_time', sh.settle_time, settle_time)
 
-    ## use sh2 motor do the scan only if 1) doing fine scan AND 2) sh_mode is 2 or 3
-    if finescan and (geo.sh_mode.get()>1):
-        yield from dscanr(geo.sh2, -0.5*range,0.5*range, npts, time)
-    else:
-    # For the fine elevator you need to change geo.sh to geo.sh2
-        yield from dscanr(geo.sh, -0.5*range,0.5*range, npts, time)
+    # ## use sh2 motor do the scan only if 1) doing fine scan AND 2) sh_mode is 2 or 3
+    # if finescan and (geo.sh_mode.get()>1):
+    #     yield from dscanr(geo.sh2, -0.5*range,0.5*range, npts, time)
+    # else:
+    # # For the fine elevator you need to change geo.sh to geo.sh2
+    #     yield from dscanr(geo.sh, -0.5*range,0.5*range, npts, time)
+
+
+    motor = geo.sh2 if finescan and geo.sh.mode.get() > 1 else geo.sh
+    print(f'using motor {motor.name} for sample height alignment')
+
+    old_settle_time = motor.settle_time
+
+    try:
+        motor.settle_time = settle_time
+        yield from dscanr(motor, -0.5*range,0.5*range, npts, time)
+    finally:
+        motor.settle_time = old_settle_time
+
+
 
 def sample_height_set_fine_o(atten_2=5, finescan=True):
-    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 2, atten_2=atten_2, finescan=finescan)
+    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 1, atten_2=atten_2, finescan=finescan)
 
 def sample_height_set_coarse(value=0):
-    yield from sample_height(alpha=0.06, range=4,npts=31,time=0.5,settle_time = 0.5, finescan=False)
+    yield from sample_height(alpha=0.06, range=4,npts=31,time=0.5,settle_time = 0, finescan=False)
 
 def sample_height_set_coarse1(value=0):
-    yield from sample_height(alpha=0.06, range=6,npts=41,time=0.5,settle_time = 0.5, finescan=False)
+    yield from sample_height(alpha=0.06, range=6,npts=41,time=0.5,settle_time = 0, finescan=False)
 
 def sample_height_set_coarse2(value=0):
-    yield from sample_height(alpha=0.06, range=1.5,npts=31,time=0.5,settle_time = 0.5, finescan=False)
+    yield from sample_height(alpha=0.06, range=1.5,npts=31,time=0.5,settle_time = 0, finescan=False)
 
-def sample_height_set_fine(atten=5, finescan=False):
-    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 2, atten_2=atten_2, finescan=finescan)
+def sample_height_set_fine(atten_2=5, finescan=False):
+    yield from sample_height(alpha=0.06, range=0.3,npts=31,time=1,settle_time = 1, atten_2=atten_2, finescan=finescan)
 
 def blocker_out(offset=30):
     yield from bps.mov(block.y, offset)
@@ -246,7 +260,8 @@ def check_tth():
         yield from bps.mv(abs2,6)  
         yield from mabt(0,0,0)  
         yield from bps.mvr(sh,-1)
-        print('resetting tth')
+        print('resetting tth')# slit_x2 to sample distance: ~87mm, HZ, 2025/06/20
+
         yield from dscanr(tth, 0.12, -0.12, 31, 0.5)
     finally:
         yield from bps.mvr(sh,1)
@@ -307,7 +322,9 @@ def mplot2():
     plt.legend()
     plt.show()
     return
-def set_tth(new_value):
-    yield Msg('reset_user_position', geo.tth, new_value)
-    save_offsets()
-     
+
+# moved to shortcuts
+# def set_tth(new_value):
+#     yield Msg('reset_user_position', geo.tth, new_value)
+#     save_offsets()
+#      # slit_x2 to sample distance: ~87mm, HZ, 2025/06/20

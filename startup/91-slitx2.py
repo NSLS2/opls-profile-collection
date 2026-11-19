@@ -5,7 +5,7 @@ import bluesky.preprocessors as bpp
 
 
 slit_x2_offset_edge = 0 # 46.73 - 3.7 # 42.6131125 # updated, 09/30/25; 42.418  
-slit_x2_offset_gap = 10.3 # 57.139 - 3.7 # 53.006 # updated, 09/30/25, # 52.75273301552 # 53.9723 # 53.67 # 55.62 # center of the slit
+slit_x2_offset_gap = 10.34 # 57.139 - 3.7 # 53.006 # updated, 09/30/25, # 52.75273301552 # 53.9723 # 53.67 # 55.62 # center of the slit
 slit_x2_offset_block = slit_x2_offset_edge + 1 # 0.6  # 45.2 + 1.5 # plus 1.5 to block the beam
 # atten_slit =  -1.70856490 #-1.72081 # -1.775129
 # slit_x2_out = -60 # -9.5-3.7
@@ -47,11 +47,10 @@ def check_slitX2():
     yield from dscanr(slit_x2, -0.5, 0.5, 41, 0.5)
 
 
-def check_slitX2_block(block_offset=1):
+def check_slitX2_block(block_offset=1, det=pilatus100kA):
     '''Align the slit x2 edge and block the beam by 1mm
     '''
     mode='Soller'
-    det=pilatus100kA
     slit_offset = block_offset
     x2_position_original = x2.position
     # print('move slit x2 in pre-determined position')
